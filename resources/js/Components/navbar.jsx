@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "./sidebar";
 import { useState } from "react";
 
-export function Navbar({ className }) {
+export function Navbar({ className, setActiveSection }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
+  // const [activeSection, setActiveSection] = useState("dashboard")
+  // console.log(activeSection);
+  
   return (
     <header className={cn("sticky top-0 left-0 w-full z-50 flex h-16 items-center border-b bg-white shadow-md px-4 lg:px-6", className)}>
       <Sheet>
@@ -19,7 +21,7 @@ export function Navbar({ className }) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] p-0">
-          <Sidebar />
+          <Sidebar setActiveSection={setActiveSection} />
         </SheetContent>
       </Sheet>
 

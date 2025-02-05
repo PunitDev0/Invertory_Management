@@ -21,3 +21,11 @@ Route::get('/dashboard', function () {
 });
 
 Route::post('/add-product', [ProductController::class, 'addProduct']);
+Route::post('/add-product-name', [ProductController::class, 'AddProductName']);
+Route::post('/add-categories', [ProductController::class, 'AddCategory']);
+Route::get('/getcategories', [ProductController::class, 'getAllCategories']);
+Route::get('/get-product-names', [ProductController::class, 'getAllProductNames']);
+Route::get('/get-all-products', [ProductController::class, 'getAllProduct']);
+Route::post('/add-roles', [AuthController::class, 'Role']);
+Route::get('/get-all-roles', [AuthController::class, 'getAllRoles']);
+Route::get('/get-all-users', [AuthController::class, 'getAllUsers']);
