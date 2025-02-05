@@ -1,16 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { FaUser, FaEnvelope, FaLock, FaPlus, FaUserCog } from "react-icons/fa";
+import { getUserRoles, storeUserRole } from "@/lib/Apis";
+import { toast } from "react-toastify";
 
 export default function AddUserForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [newRole, setNewRole] = useState("");
+  const [roles, setRoles] = useState([]);
 
-  // Set up React Hook Form
   const form = useForm({
     defaultValues: {
       name: "",
@@ -20,46 +26,68 @@ export default function AddUserForm() {
     },
   });
 
-  // Function to generate a password starting with the username
   const generatePassword = (name) => {
     if (!name) return "";
-    const randomNumbers = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+    const randomNumbers = Math.floor(1000 + Math.random() * 9000);
     return `${name.replace(/\s+/g, "")}@${randomNumbers}`;
   };
 
-  // Handle name input change to auto-generate password
   const handleNameChange = (event) => {
     const name = event.target.value;
     form.setValue("name", name);
     form.setValue("password", generatePassword(name));
   };
 
-  // Handle form submission
+  const fetchRoles = async () => {
+    try {
+      const response = await getUserRoles();
+      setRoles(response.Roles || []);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
   const onSubmit = async (values) => {
     setIsLoading(true);
+    console.log(values);
     try {
-        const response = await axios.post("/store", {
-            name: values.name,
-            email: values.email,
-            role: values.role,
-            password: values.password,
-        });
-        setMessage(response.data.message);
-        // setFormData({ name: "", email: "", role: "", password: "" });
-        form.reset();
+      const response = await axios.post("/store", values);
+       
+      setMessage(response.data.message);
+      form.reset();
+      toast.success("User added successfully");
+    } catch (error) {
+      console.error("Error adding user:", error);
+      toast.error(`"Error adding user:" ${error.response.data.errors?.email}`);
+      // toast.error(`"Error adding user:"`);
+      setMessage("Failed to add user");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddRole = async () => {
+    if (newRole.trim()) {
+      try {
+        await storeUserRole(newRole);
+        toast.success("Role added successfully");
+        setNewRole("");
+        fetchRoles(); // Refresh roles after adding a new one
       } catch (error) {
-        console.error("Error adding user:", error);
-        setMessage("Failed to add user");
-      } finally {
-        setIsLoading(false);
+        console.error("Error adding role:", error);
       }
+    }
   };
 
   return (
-    <div className="h-[90vh] flex items-center justify-center">
-      <Card className="w-full max-w-2xl mx-auto">
+    <div className="h-[90vh] flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-2xl mx-auto shadow-lg rounded-lg bg-white">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Add New User</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">Add New User</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -69,10 +97,12 @@ export default function AddUserForm() {
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
+                  <FormItem className="flex items-center space-x-3">
+                    <FormLabel className="flex items-center text-gray-600">
+                      <FaUser className="mr-2 text-blue-500" /> Name
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter name" {...field} onChange={handleNameChange} />
+                      <Input {...field} onChange={handleNameChange} placeholder="Enter name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -84,10 +114,12 @@ export default function AddUserForm() {
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
+                  <FormItem className="flex items-center space-x-3">
+                    <FormLabel className="flex items-center text-gray-600">
+                      <FaEnvelope className="mr-2 text-blue-500" /> Email
+                    </FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter email" {...field} />
+                      <Input {...field} type="email" placeholder="Enter email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -95,22 +127,30 @@ export default function AddUserForm() {
               />
 
               {/* Role Field */}
+              {/* Role Field */}
               <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                  <FormItem className="flex items-center space-x-3">
+                    <FormLabel className="flex items-center text-gray-600">
+                      <FaUserCog className="mr-2 text-blue-500" /> Role
+                    </FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)} // Update selected role correctly
+                      value={field.value} // Ensure selected role is shown
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.name}>  {/* Convert ID to string */}
+                            {role.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -118,24 +158,68 @@ export default function AddUserForm() {
                 )}
               />
 
-              {/* Password Field (Auto-generated) */}
+
+              {/* Password Field */}
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password (Auto-generated)</FormLabel>
+                  <FormItem className="flex items-center space-x-3">
+                    <FormLabel className="flex items-center text-gray-600">
+                      <FaLock className="mr-2 text-blue-500" /> Password (Auto-generated)
+                    </FormLabel>
                     <FormControl>
-                      <Input type="text" readOnly placeholder="Generated password" {...field} />
+                      <Input {...field} readOnly placeholder="Generated password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full bg-[#7C3AED] hover:bg-[#6D28D9]" disabled={isLoading}>
-                {isLoading ? "Adding User..." : "Add User"}
-              </Button>
+              {/* Buttons Section */}
+              <div className="flex justify-end space-x-4">
+                {/* Add Role Button */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="bg-green-500 hover:bg-green-600 flex items-center">
+                      <FaPlus className="mr-2" /> Add Role
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Role</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4">
+                      <Input
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value)}
+                        placeholder="Enter new role"
+                      />
+                      <DialogFooter className={`mt-4`}>
+                        <Button onClick={handleAddRole} className="bg-green-500 hover:bg-green-600">
+                          <FaPlus className="mr-2" /> Add Role
+                        </Button>
+                        <Button variant="outline" onClick={() => setNewRole("")}>
+                          Cancel
+                        </Button>
+                      </DialogFooter>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Submit Button */}
+                <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <FaUser className="animate-spin mr-2" /> Adding...
+                    </>
+                  ) : (
+                    <>
+                      <FaUser className="mr-2" /> Add User
+                    </>
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
