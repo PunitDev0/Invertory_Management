@@ -6,72 +6,89 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { fetchCategories, fetchProductNames } from "@/lib/Apis";
+import { toast } from "react-toastify";
 
 export function AddProductForm() {
   const methods = useForm({
     defaultValues: {
       name: "",
       category: "",
-      owned_imported: "",
+      owned_imported: "owned",
       price: "",
       stock_quantity: "",
       description: "",
-      company_name: "", // Added company name here
-      images: []
+      company_name: "",
     },
     mode: "onBlur", // Validation triggers onBlur
   });
-  const { control, handleSubmit, setValue, register, formState: { errors } } = methods;
+  const { control, handleSubmit, setValue, register, formState: { errors }, reset } = methods;
+  const [categories, setCategories] = useState([]);
+  const [productsName, setProductsName] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
-  const [imagePreviews, setImagePreviews] = useState([]);
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
+        setCategories(categoriesData);
+        console.log(categoriesData);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
 
-  const handleImageChange = (e) => {
-    const files = e.target.files;
-    if (files.length > 0) {
-      const fileArray = Array.from(files);
-      const validFiles = fileArray.filter(file => file.type.startsWith('image/')); // Filter valid image files
-      setImagePreviews(validFiles.map((file) => URL.createObjectURL(file)));
-      setValue("images", validFiles); // Update the value of images in form data
-    }
+    getCategories();
+  }, []);
+
+  useEffect(() => {
+    const getProductsName = async () => {
+      try {
+        const response = await fetchProductNames();  // Use fetchProductNames from api.js
+        setProductsName(response);
+        setFilteredProducts(response);  // Initially show all products
+        console.log(response);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    getProductsName();
+  }, []);
+
+  const handleCategoryChange = (categoryId) => {
+    // Filter products by category_id
+    const filtered = productsName.filter(product => product.category_id === parseInt(categoryId));
+    setFilteredProducts(filtered);
+    console.log(filtered);
   };
 
   const onSubmit = async (data) => {
-    console.log("Form Data:", data); // Check if data is being logged here
-
-    if (data.images.length === 0) {
-      alert("Please upload at least one image.");
-      return;
-    }
+    console.log("Form Data:", data);
 
     const formData = new FormData();
     formData.append("productName", data.name);
-    formData.append("category_id", '2');
+    formData.append("category", data.category); // For now, assuming category_id is fixed. Modify this if necessary.
     formData.append("owned_imported", data.owned_imported);
     formData.append("price", data.price);
     formData.append("stock_quantity", data.stock_quantity);
     formData.append("description", data.description);
-    formData.append("companyName", data.company_name); // Append company name to FormData
-
-    // Append images to FormData
-    data.images.forEach((image, index) => {
-      formData.append("images[]", image);
-    });
-    console.log(formData); // Check if FormData is being populated correctly
+    formData.append("companyName", data.company_name);
 
     try {
-      // Send data to Laravel backend API
+      // Send data to backend API
       const response = await axios.post("/add-product", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
       console.log("Product added successfully:", response.data);
-      // Handle success response
+      toast.success('Product added successfully')
+      reset()
     } catch (error) {
       console.error("Error adding product:", error);
-      // Handle error response
     }
   };
 
@@ -81,46 +98,6 @@ export function AddProductForm() {
         <Card className="p-8 shadow-lg rounded-lg bg-white">
           <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Add New Product</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Company Name */}
-            <FormField
-              control={control}
-              name="company_name"
-              rules={{ required: "Company Name is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="p-4 border border-gray-300 rounded-md shadow-sm w-full"
-                      placeholder="Enter company name"
-                    />
-                  </FormControl>
-                  <FormMessage>{errors.company_name?.message}</FormMessage>
-                </FormItem>
-              )}
-            />
-
-            {/* Product Name */}
-            <FormField
-              control={control}
-              name="name"
-              rules={{ required: "Product Name is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      className="p-4 border border-gray-300 rounded-md shadow-sm w-full"
-                      placeholder="Enter product name"
-                    />
-                  </FormControl>
-                  <FormMessage>{errors.name?.message}</FormMessage>
-                </FormItem>
-              )}
-            />
-
             {/* Category */}
             <FormField
               control={control}
@@ -133,21 +110,69 @@ export function AddProductForm() {
                     <Controller
                       {...field}
                       render={({ field: { onChange, value } }) => (
-                        <Select onValueChange={onChange} value={value} className="w-full">
+                        <Select
+                          onValueChange={(selectedCategoryName) => {
+                            const selectedCategory = categories.find(
+                              (category) => category.name === selectedCategoryName
+                            );
+                            onChange(selectedCategoryName);  // Update category name
+                            handleCategoryChange(selectedCategory.id);  // Pass category id
+                          }}
+                          value={value} // value is based on the category name
+                          className="w-full"
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="electronics">Electronics</SelectItem>
-                            <SelectItem value="clothing">Clothing</SelectItem>
-                            <SelectItem value="books">Books</SelectItem>
-                            <SelectItem value="home">Home & Garden</SelectItem>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.name}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}
                     />
                   </FormControl>
                   <FormMessage>{errors.category?.message}</FormMessage>
+                </FormItem>
+              )}
+            />
+
+
+            {/* Product Name */}
+            <FormField
+              control={control}
+              name="name"
+              rules={{ required: "Product Name is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Name</FormLabel>
+                  <FormControl>
+                    <Controller
+                      {...field}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          onValueChange={onChange}
+                          value={value}
+                          className="w-full"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a product name" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredProducts.map((product) => (
+                              <SelectItem key={product.id} value={product.name}>
+                                {product.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.name?.message}</FormMessage>
                 </FormItem>
               )}
             />
@@ -247,42 +272,25 @@ export function AddProductForm() {
               )}
             />
 
-            {/* Image Upload Section */}
-            <div className="space-y-4">
-              <Label htmlFor="images">Product Images</Label>
-              <input
-                type="file"
-                id="images"
-                name="images"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-                className="w-full p-4 border border-gray-300 rounded-md shadow-sm"
-              />
-              {imagePreviews.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  {imagePreviews.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img src={image} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded-md shadow-lg" />
-                      <div className="absolute top-2 right-2 p-1 bg-black text-white rounded-full cursor-pointer">
-                        <button
-                          onClick={() => {
-                            const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
-                            setImagePreviews(updatedPreviews);
-                            setValue("images", updatedPreviews); // Update form data
-                          }}
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Company Name */}
+            <FormField
+              control={control}
+              name="company_name"
+              rules={{ required: "Company Name is required" }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="p-4 border border-gray-300 rounded-md shadow-sm w-full"
+                      placeholder="Enter company name"
+                    />
+                  </FormControl>
+                  <FormMessage>{errors.company_name?.message}</FormMessage>
+                </FormItem>
               )}
-              {imagePreviews.length === 0 && (
-                <p className="text-gray-500 text-sm">No images selected. Choose images to upload.</p>
-              )}
-            </div>
+            />
 
             {/* Submit Button */}
             <Button type="submit" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition">
@@ -294,4 +302,3 @@ export function AddProductForm() {
     </FormProvider>
   );
 }
-
