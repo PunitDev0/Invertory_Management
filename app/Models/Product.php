@@ -16,16 +16,13 @@ class Product extends Model
     protected $fillable = [
         'productName',
         'companyName',
-        'category_id',
+        'category',
         'owned_imported',
         'price',
         'stock_quantity',
         'description',
-        'images',
     ];
 
-    // Cast the 'images' column to an array (so it's automatically converted from JSON)
-    protected $casts = [
-        'images' => 'array',  // Automatically cast the 'images' column to an array
-    ];
+    // No need to cast 'images' anymore since it's not being used
 }
+
