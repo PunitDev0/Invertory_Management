@@ -45,7 +45,7 @@ export default function OrderTracking() {
 
   return (
     <div className="p-6 flex flex-col items-center bg-gray-50 min-h-screen">
-       <Card className="grid gap-6 grid-cols-2 xl:grid-cols-4 w-full sticky top-16 z-[1000] p-4 mb-4 shadow-xl">
+       <Card className="grid gap-6 grid-cols-2 xl:grid-cols-4 w-full sticky top-16 z-50 p-4 mb-4 shadow-xl">
         <Card className="p-6 bg-[#E5EDE5]">
           <div className="flex justify-between mb-4">
             <div className="text-sm text-gray-600">Total Orders</div>
