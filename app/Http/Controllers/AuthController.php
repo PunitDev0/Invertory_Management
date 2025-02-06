@@ -111,4 +111,12 @@ class AuthController extends Controller
     {
         // This should handle login via Google OAuth, you can use Laravel Socialite to help with this.
     }
+
+    public function getLoggedInUser(Request $request)
+    {
+        $user = Auth::user(); // Get the currently authenticated user
+        return response()->json(['user' => $user], 200);
+    }
+
+
 }

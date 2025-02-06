@@ -4,17 +4,23 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { fetchUsers } from "@/lib/Apis";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon, CubeIcon } from "@radix-ui/react-icons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
 import { FaSearch } from "react-icons/fa";
 import { Button } from "./ui/button";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch"; // Import ShadCN Switch component
 
 export default function AllUsers({ setActiveSection, setuserData }) {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [status, setStatus] = useState(null); // Ensure correct status state
 
   useEffect(() => {
     const getUsers = async () => {
@@ -30,39 +36,64 @@ export default function AllUsers({ setActiveSection, setuserData }) {
     getUsers();
   }, []);
 
-  const handleAction = (action, user) => {
+  const handleAction = async (action, user) => {
     if (action === "edit") {
       setActiveSection("add-user");
-      setuserData(user)
+      setuserData(user);
     } else if (action === "delete") {
-      // Implement delete logic here
-      console.log("Deleting user:", user.id);
+      setSelectedUser(user);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedUser) return;
+    try {
+      await axios.delete(`/delete-user/${selectedUser.id}`);
+      setUsers(users.filter((u) => u.id !== selectedUser.id));
+      toast.success("User deleted successfully!");
+    } catch (error) {
+      toast.error("Failed to delete user. Try again!");
+      console.error("Delete error:", error);
+    } finally {
+      setIsDialogOpen(false);
+    }
+  };
+
+  const toggleUserActiveStatus = async (user) => {
+    try {
+      const updatedUser = { ...user, status: !user.status }; // Toggle the status field (active/inactive)
+      const response = await axios.put(`/update-user/${user.id}`, updatedUser); // Pass updated user object
+      console.log(response);
+
+      // Update user state locally
+      setUsers(users.map(u => (u.id === user.id ? updatedUser : u)));
+      toast.success(`User ${updatedUser.status ? "activated" : "deactivated"} successfully!`);
+    } catch (error) {
+      toast.error("Failed to update user status. Try again!");
+      console.error("Error updating user status:", error);
     }
   };
 
   return (
     <div className="p-6 min-h-screen">
+      <div>
+        <h2 className="text-3xl font-bold flex items-center gap-2 text-indigo-800">
+          <CubeIcon className="h-8 w-8 text-indigo-600" /> All Users
+        </h2>
+      </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4 max-w-lg border p-2 mt-4 mx-4 rounded-md bg-white shadow-sm">
+          {/* Search section can be added later if needed */}
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={() => setActiveSection('add-user')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
+          <Button className="bg-blue-500 text-white hover:bg-blue-600">Export</Button>
+        </div>
+      </div>
+
       <Card className="w-full shadow-lg rounded-xl bg-white overflow-hidden">
         <CardContent className="p-5">
-          <div>
-            <h2 className="text-3xl font-bold flex items-center gap-2 text-indigo-800">
-              <CubeIcon className="h-8 w-8 text-indigo-600" /> All Users
-            </h2>
-          </div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4 max-w-lg border p-2 mt-4 mx-4 rounded-md bg-white shadow-sm">
-              <FaSearch className="text-gray-500" size={20} />
-              <Input
-                className="outline-none border-none px-3 py-2 rounded-md text-gray-700"
-                placeholder="Search..."
-              />
-            </div>
-            <div className="flex gap-4">
-              <Button onClick={() => setActiveSection('add-user')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
-              <Button className="bg-blue-500 text-white hover:bg-blue-600">Export</Button>
-            </div>
-          </div>
-
           <div className="p-6">
             {error ? (
               <Alert variant="destructive" className="mb-6 bg-red-100 border border-red-400">
@@ -85,6 +116,7 @@ export default function AllUsers({ setActiveSection, setuserData }) {
                       <TableHead className="text-center text-indigo-800">Email</TableHead>
                       <TableHead className="text-center text-indigo-800">Role</TableHead>
                       <TableHead className="text-center text-indigo-800">Created At</TableHead>
+                      <TableHead className="text-center text-indigo-800">Status</TableHead> {/* New Active Column */}
                       <TableHead className="text-center text-indigo-800">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -104,7 +136,18 @@ export default function AllUsers({ setActiveSection, setuserData }) {
                             {new Date(user.created_at).toLocaleString()}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Select onValueChange={(value) => handleAction(value, user)} className="">
+                            {/* Check user status and display the Switch component */}
+                            <Switch
+                              checked={user.status}  // Use correct field `status`
+                              onCheckedChange={() => {
+                                toggleUserActiveStatus(user);
+                              }}  // Toggle function
+                              className={`${user.status ? 'bg-green-600' : 'bg-red-600'} rounded-full`}
+                            />
+                          </TableCell>
+
+                          <TableCell className="text-center">
+                            <Select onValueChange={(value) => handleAction(value, user)}>
                               <SelectTrigger className="w-24 border rounded-md bg-indigo-50 text-indigo-700 mx-auto">
                                 <SelectValue placeholder="Actions" />
                               </SelectTrigger>
@@ -118,11 +161,9 @@ export default function AllUsers({ setActiveSection, setuserData }) {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan="6" className="h-24 text-center text-gray-500">
-                          <div className="flex flex-col items-center justify-center py-8 gap-2">
-                            <CubeIcon className="h-8 w-8 text-gray-400" />
-                            No users found
-                          </div>
+                        <TableCell colSpan="7" className="h-24 text-center text-gray-500">
+                          <CubeIcon className="h-8 w-8 text-gray-400" />
+                          No users found
                         </TableCell>
                       </TableRow>
                     )}
@@ -133,6 +174,22 @@ export default function AllUsers({ setActiveSection, setuserData }) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

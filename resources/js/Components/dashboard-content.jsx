@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Navbar } from "./navbar"
 import { FaShoppingCart, FaBox, FaArrowUp, FaDollarSign, FaUsers, FaRegClock, FaRupeeSign } from 'react-icons/fa';  // Importing icons
 import { User2 } from "lucide-react"
+import { fetchOrders } from "@/lib/Apis"
+import { useEffect, useState } from "react"
 
 const weeklyData = [
   { day: "Mon", value: 10000 },
@@ -32,6 +34,25 @@ const lastOrders = [
 ]
 
 export function DashboardContent() {
+   const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true); // to show loading state
+  
+    useEffect(() => {
+      // Fetch orders on component mount
+      const getOrders = async () => {
+        try {
+          const fetchedOrders = await fetchOrders();
+
+          setOrders(fetchedOrders);
+          setLoading(false);
+        } catch (error) {
+          console.error("Error fetching orders:", error);
+          setLoading(false);
+        }
+      };
+      getOrders();
+    }, []);
+
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 relative">
       <div className="max-w-[2000px] mx-auto space-y-8">
@@ -167,7 +188,7 @@ export function DashboardContent() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <Card className="p-6">
+          {/* <Card className="p-6">
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-semibold">Last Orders</h3>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -198,9 +219,9 @@ export function DashboardContent() {
                 </div>
               ))}
             </div>
-          </Card>
+          </Card> */}
 
-          <Card className="p-6">
+          {/* <Card className="p-6">
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-semibold">Recent Sales</h3>
               <Button variant="ghost" className="text-sm">
@@ -223,7 +244,7 @@ export function DashboardContent() {
                 </div>
               ))}
             </div>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

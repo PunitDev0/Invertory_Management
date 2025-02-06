@@ -39,7 +39,7 @@ export function AddProductForm({productData}) {
     },
     mode: "onBlur", // Validation triggers onBlur
   });
-  console.log(productData);
+  // console.log(productData);
   
 
   const { control, handleSubmit, setValue, register, formState: { errors }, reset } = methods;
@@ -84,7 +84,7 @@ export function AddProductForm({productData}) {
 
   const onSubmit = async (data) => {
     const formData = new FormData();
-    formData.append("productName", data.name);
+    formData.append("productName", data.productName);
     formData.append("category", data.category);
     formData.append("owned_imported", data.owned_imported);
     formData.append("price", data.price);
@@ -93,13 +93,26 @@ export function AddProductForm({productData}) {
     formData.append("companyName", data.company_name);
 
     try {
-      const response = await axios.post("/add-product", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      toast.success('Product added successfully');
-      reset();
+      if(productData){
+        // Update product
+        console.log(data);
+        
+        const response = await axios.put(`/product-update/${productData.id}`, data);
+        toast.success('Product updated successfully');
+        console.log(response);
+        if(response.status === 200){
+          window.location.reload()
+        }
+        reset();
+      }else{
+        const response = await axios.post("/add-product", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        toast.success('Product added successfully');
+        reset();
+      }
     } catch (error) {
       console.error("Error adding product:", error);
     }

@@ -19,8 +19,10 @@ import { Button } from "@/components/ui/button"
 
 export function Sidebar({
   className,
-  setActiveSection
+  setActiveSection,
+  user
 }) {
+console.log(user);
 
   const handlelogout = () => {
     Inertia.get('/logout')
@@ -31,9 +33,9 @@ export function Sidebar({
       <div className="flex h-16 items-center border-b border-white/10 px-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-black font-bold">Z</span>
+            <span className="text-black font-bold">N</span>
           </div>
-          <span className="text-xl font-semibold">Zarss</span>
+          <span className="text-xl font-semibold">Nikatby</span>
         </div>
       </div>
       <div className="flex flex-col items-center p-6">
@@ -42,7 +44,7 @@ export function Sidebar({
         </div>
         <div className="text-center">
           <div className="text-sm text-gray-400">Welcome Back,</div>
-          <div className="font-semibold">Mark Johnson</div>
+          <div className="font-semibold">{user?.name}</div>
         </div>
       </div>
       <nav className="flex-1 space-y-1 p-4">

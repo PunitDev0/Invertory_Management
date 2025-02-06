@@ -87,3 +87,14 @@ export const addCategory = async (data) => {
     throw error;
   }
 };
+
+// Fetch all orders
+export const fetchOrders = async () => {
+  try {
+    const response = await axios.get(`/get-all-orders`);
+    return response.data.orders; // Ensure this matches the Laravel API response
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw error;
+  }
+};
