@@ -3,6 +3,8 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tool
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "./navbar"
+import { FaShoppingCart, FaBox, FaArrowUp, FaDollarSign, FaUsers, FaRegClock, FaRupeeSign } from 'react-icons/fa';  // Importing icons
+import { User2 } from "lucide-react"
 
 const weeklyData = [
   { day: "Mon", value: 10000 },
@@ -31,21 +33,22 @@ const lastOrders = [
 
 export function DashboardContent() {
   return (
-    (<div className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 relative">
-      {/* <Navbar/> */}
+    <div className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 relative">
       <div className="max-w-[2000px] mx-auto space-y-8">
-        <div
-          className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-semibold">Dashboard</h2>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          <Card className="p-6 bg-[#E5EDE5]">
-            <div className="flex justify-between mb-4">
-              <div className="text-sm text-gray-600">Total Orders</div>
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="p-6 bg-[#E5EDE5]  items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <FaShoppingCart />
+                Total Orders
+              </div>
+              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
               <div className="text-sm text-green-600">+17%</div>
             </div>
-            <div className="text-2xl font-bold mb-4">$ 56,874</div>
             <ResponsiveContainer height={50}>
               <LineChart data={weeklyData}>
                 <Line
@@ -59,12 +62,15 @@ export function DashboardContent() {
             </ResponsiveContainer>
           </Card>
 
-          <Card className="p-6 bg-[#FFE9B6]">
-            <div className="flex justify-between mb-4">
-              <div className="text-sm text-gray-600">Total Products</div>
+          <Card className="p-6 bg-[#FFE9B6]  items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <FaBox />
+                Total Products
+              </div>
+              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
               <div className="text-sm text-yellow-600">+23%</div>
             </div>
-            <div className="text-2xl font-bold mb-4">$ 24,575</div>
             <ResponsiveContainer height={50}>
               <LineChart data={weeklyData}>
                 <Line
@@ -77,20 +83,53 @@ export function DashboardContent() {
               </LineChart>
             </ResponsiveContainer>
           </Card>
-
-          <Card className="p-6 bg-[#8B8BFF] text-white sm:col-span-2 xl:col-span-1">
-            <div className="text-lg font-semibold mb-2">Upgrade</div>
-            <p className="text-sm mb-4">Get more information and opportunities</p>
-            <Button variant="secondary" className="w-full">
-              Go Pro
-            </Button>
+          <Card className="p-6 bg-[#ffb6b6]  items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <FaUsers />
+                Unique Customers
+              </div>
+              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-sm text-green-600">+23%</div>
+            </div>
+            <ResponsiveContainer height={50}>
+              <LineChart data={weeklyData}>
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="red"
+                  strokeWidth={2}
+                  dot={false} />
+                <Tooltip />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+          <Card className="p-6 bg-[#cdffb6]  items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-600 flex items-center gap-2">
+                <FaUsers />
+                Unique Customers
+              </div>
+              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-sm text-green-600">+23%</div>
+            </div>
+            <ResponsiveContainer height={50}>
+              <LineChart data={weeklyData}>
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="green"
+                  strokeWidth={2}
+                  dot={false} />
+                <Tooltip />
+              </LineChart>
+            </ResponsiveContainer>
           </Card>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <Card className="p-6">
-            <div
-              className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="font-semibold">User in The Last Week</h3>
                 <div className="text-2xl font-bold text-green-600">+ 3.2%</div>
@@ -111,13 +150,12 @@ export function DashboardContent() {
             </div>
           </Card>
 
-          <Card className="p-6">
-            <div
-              className="flex flex-col gap-2 mb-6 sm:flex-row sm:items-center sm:justify-between">
+          <Card className="p-6 h-fit">
+            <div className="flex flex-col gap-2 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-semibold">Monthly Profits</h3>
               <div className="text-sm text-gray-500">Total Profit Growth of 26%</div>
             </div>
-            <div className="h-[300px] sm:h-[400px]">
+            <div className="">
               <PieChart
                 data={[
                   { name: "Giveaway", value: 60 },
@@ -130,8 +168,7 @@ export function DashboardContent() {
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <Card className="p-6">
-            <div
-              className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-semibold">Last Orders</h3>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="text-sm text-gray-500">Data Updates Every 3 Hours</div>
@@ -164,8 +201,7 @@ export function DashboardContent() {
           </Card>
 
           <Card className="p-6">
-            <div
-              className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="font-semibold">Recent Sales</h3>
               <Button variant="ghost" className="text-sm">
                 See All
@@ -190,15 +226,13 @@ export function DashboardContent() {
           </Card>
         </div>
       </div>
-    </div>)
+    </div>
   );
 }
 
-function PieChart({
-  data
-}) {
+function PieChart({ data }) {
   return (
-    (<div className="relative">
+    <div className="relative">
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <circle
           cx="50"
@@ -236,7 +270,6 @@ function PieChart({
           <div className="text-sm text-gray-500">Total</div>
         </div>
       </div>
-    </div>)
+    </div>
   );
 }
-

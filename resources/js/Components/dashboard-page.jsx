@@ -12,7 +12,11 @@ import AllUsers from "./all-users"
 
 export function DashboardPage() {
   const [activeSection, setActiveSection] = useState("dashboard")
+  const [Id, setId] = useState()
+  const [productData, setproductData] = useState()
+  const [UserData, setuserData] = useState()
   console.log(activeSection);
+  console.log(UserData);
   
   return (
     (<div className="flex min-h-screen flex-col bg-[#F8F8F8]">
@@ -23,11 +27,11 @@ export function DashboardPage() {
         <main className="flex-1 lg:pl-64">
            <Navbar className="lg:pl-64" setActiveSection={setActiveSection} />
           {activeSection === "dashboard" && <DashboardContent />}
-          {activeSection === "add-product" && <MainFrom />}
-          {activeSection === "add-user" && <AddUserForm />}
+          {activeSection === "add-product" && <MainFrom Id={Id} productData={productData}/>}
+          {activeSection === "add-user" && <AddUserForm Id={Id} UserData={UserData}/>}
           {activeSection === "order-tracking" && <OrdersTracking />}
-          {activeSection === "all-products" && <AllProducts />}
-          {activeSection === "all-users" && <AllUsers/>}
+          {activeSection === "all-products" && <AllProducts setActiveSection={setActiveSection} setId={setId} setproductData={setproductData}/>}
+          {activeSection === "all-users" && <AllUsers setActiveSection={setActiveSection} setId={setId} setuserData={setuserData}/>}
         </main>
       </div>
     </div>)
