@@ -103,7 +103,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-        return response()->json(['message' => 'Logged out successfully'], 200);
+        return Inertia::location('/');
     }
 
     // Google login (placeholder for integration with a service like Laravel Socialite)
