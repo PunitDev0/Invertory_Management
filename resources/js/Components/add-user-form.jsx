@@ -144,6 +144,17 @@ export default function AddUserForm({UserData}) {
 
               {/* Role Field */}
               {/* Role Field */}
+              {UserData && (
+                <FormItem className="flex items-center space-x-3">
+                  <FormLabel className="flex items-center text-gray-600">
+                    <FaUserCog className="mr-2 text-blue-500" /> Role
+                  </FormLabel>
+                  <FormControl>
+                    <Input  readOnly value={`Current Role - ${UserData.role}`} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
               <FormField
                 control={form.control}
                 name="role"
@@ -175,7 +186,9 @@ export default function AddUserForm({UserData}) {
               />
 
 
-              {/* Password Field */}
+              {!UserData && (
+                <>
+                  {/* Password Field */}
               <FormField
                 control={form.control}
                 name="password"
@@ -191,6 +204,8 @@ export default function AddUserForm({UserData}) {
                   </FormItem>
                 )}
               />
+                </>
+              )}
 
               {/* Buttons Section */}
               <div className="flex justify-end space-x-4">

@@ -16,11 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-export default function MainForm() {
+export default function MainForm({productData}) {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  console.log();
+  
   useEffect(() => {
     const getProducts = async () => {
       try {
@@ -39,7 +40,7 @@ export default function MainForm() {
     <div className=" p-6">
       {/* Left Side - Forms */}
       <div className="space-y-6 grid md:grid-cols-2">
-        <AddProductForm />
+        <AddProductForm productData={productData}/>
         <div>
         <AddCategoryForm />
         <AddProductName />

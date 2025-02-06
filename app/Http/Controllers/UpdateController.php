@@ -30,7 +30,7 @@ class UpdateController extends Controller
             'name'     => 'sometimes|string|max:255',
             'email'    => 'sometimes|email|unique:users,email,' . $user->id,
             'role'     => 'sometimes|string|max:255',
-            'password' => 'sometimes|min:8', // Optional password update
+          
         ]);
 
         // Update user fields if they are provided in the request
@@ -45,12 +45,6 @@ class UpdateController extends Controller
         if ($request->has('role')) {
             $user->role = $request->role;
         }
-
-        if ($request->has('password')) {
-            // Ensure the new password is hashed
-            $user->password = Hash::make($request->password);
-        }
-
         // Save updated user details
         $user->save();
 

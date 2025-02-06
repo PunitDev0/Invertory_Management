@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/Components/u
 import { SelectValue } from "./ui/select";
 import { Button } from "./ui/button";
 
-export default function AllProducts({ setActiveSection }) {
+export default function AllProducts({ setActiveSection, setproductData }) {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +41,8 @@ export default function AllProducts({ setActiveSection }) {
   const handleAction = (action, product) => {
     if (action === "edit") {
       setActiveSection("add-product");
+      setproductData(product)
+      
     } else if (action === "delete") {
       // Implement delete logic here
       console.log("Deleting user:", product.id);

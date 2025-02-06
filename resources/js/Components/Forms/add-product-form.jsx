@@ -26,19 +26,21 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 
-export function AddProductForm() {
+export function AddProductForm({productData}) {
   const methods = useForm({
     defaultValues: {
-      name: "",
-      category: "",
-      owned_imported: "owned",
-      price: "",
-      stock_quantity: "",
-      description: "",
-      company_name: "",
+      productName: productData?.productName || "",
+      category: productData?.category || "",
+      owned_imported:productData?.owned_imported || "owned",
+      price: productData?.price || "",
+      stock_quantity:productData?.stock_quantity ||  "",
+      description: productData?.description ||"",
+      company_name: productData?.companyName || "",
     },
     mode: "onBlur", // Validation triggers onBlur
   });
+  console.log(productData);
+  
 
   const { control, handleSubmit, setValue, register, formState: { errors }, reset } = methods;
   const [categories, setCategories] = useState([]);
@@ -169,7 +171,7 @@ export function AddProductForm() {
             {/* Product Name Selection */}
             <FormField
               control={control}
-              name="name"
+              name="productName"
               rules={{ required: "Product Name is required" }}
               render={({ field }) => (
                 <FormItem>
