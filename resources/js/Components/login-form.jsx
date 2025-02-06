@@ -42,7 +42,8 @@ export function LoginForm({
       console.log("Login successful:", response);
       if (response.data.redirect) {
         // Redirect using Inertia's client-side navigation
-        Inertia.visit(response.data.redirect);
+        // Inertia.visit(response.data.redirect);
+        window.location.href ='/admin/dashboard'
       }
     } catch (err) {
       // Handle error (e.g., display error message)

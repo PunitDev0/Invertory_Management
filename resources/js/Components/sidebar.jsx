@@ -1,5 +1,5 @@
 "use client";
-import { Inertia } from "@inertiajs/inertia-react";
+import { Inertia } from "@inertiajs/inertia";
 
 
 import {
@@ -21,6 +21,10 @@ export function Sidebar({
   className,
   setActiveSection
 }) {
+
+  const handlelogout = () => {
+    Inertia.get('/logout')
+  }
   return (
     (<div
       className={cn("flex h-full w-full flex-col bg-[#2D2D2D] text-white z-[1000]", className)}>
@@ -70,8 +74,8 @@ export function Sidebar({
       <div className="border-t border-white/10 p-4">
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-400 hover:text-white hover:bg-white/5">
-          <LogOut className="mr-2 h-5 w-5" />
+          className="w-full justify-start text-gray-400 hover:text-white hover:bg-white/5" onClick={handlelogout}>
+          <LogOut className="mr-2 h-5 w-5"/>
           Log Out
         </Button>
       </div>
