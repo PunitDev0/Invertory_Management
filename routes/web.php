@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UpdateController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,3 +33,7 @@ Route::get('/get-all-products', [ProductController::class, 'getAllProduct']);
 Route::post('/add-roles', [AuthController::class, 'Role']);
 Route::get('/get-all-roles', [AuthController::class, 'getAllRoles']);
 Route::get('/get-all-users', [AuthController::class, 'getAllUsers']);
+
+
+// For an API route
+Route::put('/update-user/{id}', [UpdateController::class, 'update']);

@@ -11,16 +11,17 @@ import { FaUser, FaEnvelope, FaLock, FaPlus, FaUserCog } from "react-icons/fa";
 import { getUserRoles, storeUserRole } from "@/lib/Apis";
 import { toast } from "react-toastify";
 
-export default function AddUserForm() {
+export default function AddUserForm({UserData}) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [newRole, setNewRole] = useState("");
   const [roles, setRoles] = useState([]);
-
+//  console.log(UserData);
+ 
   const form = useForm({
     defaultValues: {
-      name: "",
-      email: "",
+      name: UserData?.name || "",
+      email: UserData?.email ||  "",
       role: "",
       password: "",
     },
@@ -53,22 +54,37 @@ export default function AddUserForm() {
 
   const onSubmit = async (values) => {
     setIsLoading(true);
-    console.log(values);
     try {
-      const response = await axios.post("/store", values);
-       
-      setMessage(response.data.message);
+      if (UserData) {
+        // Update existing user
+        const response = await axios.put(`/update-user/${UserData.id}`, values);
+        console.log("Updated user data:", response.data);
+        toast.success("User updated successfully");
+        form.reset();
+      } else {
+        // Create a new user
+        const response = await axios.post("/store", values);
+        console.log("Created new user:", response.data);
+        toast.success("User added successfully");
+      }
       form.reset();
-      toast.success("User added successfully");
     } catch (error) {
-      console.error("Error adding user:", error);
-      toast.error(`"Error adding user:" ${error.response.data.errors?.email}`);
-      // toast.error(`"Error adding user:"`);
-      setMessage("Failed to add user");
+      console.error("Error submitting form:", error);
+      toast.error(`Error: ${error.response?.data?.message || "Failed to process request"}`);
     } finally {
       setIsLoading(false);
     }
   };
+  
+
+  // const updateUser = (data) => {
+  //   console.log('updated user');
+  //   console.log(data);
+    
+    
+  // }
+
+  
 
   const handleAddRole = async () => {
     if (newRole.trim()) {
@@ -208,7 +224,34 @@ export default function AddUserForm() {
                 </Dialog>
 
                 {/* Submit Button */}
-                <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
+                {UserData ? (
+                  <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
+                    {isLoading? (
+                      <>
+                        <FaUser className="animate-spin mr-2" /> Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaUser className="mr-2" /> Update User
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
+                    {isLoading? (
+                      <>
+                        <FaUser className="animate-spin mr-2" /> Adding...
+                      </>
+                    ) : (
+                      <>
+                        <FaUser className="mr-2" /> Add User
+                      </>
+                    )}
+                  </Button>
+                )
+              
+              }
+                {/* <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <FaUser className="animate-spin mr-2" /> Adding...
@@ -218,7 +261,7 @@ export default function AddUserForm() {
                       <FaUser className="mr-2" /> Add User
                     </>
                   )}
-                </Button>
+                </Button> */}
               </div>
             </form>
           </Form>
