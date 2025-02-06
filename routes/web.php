@@ -16,8 +16,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/store', [AuthController::class, 'store']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::get('/dashboard', function () {
+Route::get('/admin/dashboard', function () {
     return Inertia::render('Dashboard');
+});
+Route::get('/dashboard', function () {
+    return Inertia::render('UserDashboard');
 });
 
 Route::post('/add-product', [ProductController::class, 'addProduct']);

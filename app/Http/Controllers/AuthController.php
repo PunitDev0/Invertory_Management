@@ -30,7 +30,7 @@ class AuthController extends Controller
             // Return a success response, but no redirect here
             return response()->json([
                 'message' => 'Login successful',
-                'redirect' => '/dashboard', // Provide the redirect URL
+                'redirect' => '/admin/dashboard', // Provide the redirect URL
             ]);
         }
 

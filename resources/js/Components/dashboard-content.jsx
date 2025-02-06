@@ -42,7 +42,7 @@ export function DashboardContent() {
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <Card className="p-6 bg-[#E5EDE5]">
             <div className="flex justify-between mb-4">
-              <div className="text-sm text-gray-600">Balance</div>
+              <div className="text-sm text-gray-600">Total Orders</div>
               <div className="text-sm text-green-600">+17%</div>
             </div>
             <div className="text-2xl font-bold mb-4">$ 56,874</div>
@@ -61,7 +61,7 @@ export function DashboardContent() {
 
           <Card className="p-6 bg-[#FFE9B6]">
             <div className="flex justify-between mb-4">
-              <div className="text-sm text-gray-600">Sales</div>
+              <div className="text-sm text-gray-600">Total Products</div>
               <div className="text-sm text-yellow-600">+23%</div>
             </div>
             <div className="text-2xl font-bold mb-4">$ 24,575</div>
