@@ -72,7 +72,7 @@ export default function AllProducts({ setActiveSection, setproductData }) {
             </div>
             <div className="flex gap-4">
               <Button onClick={() => setActiveSection('add-product')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
-              <Button className="bg-blue-500 text-white hover:bg-blue-600">Export</Button>
+             
             </div>
           </div>
       <Card className="w-full shadow-lg rounded-lg bg-white overflow-hidden mt-4">

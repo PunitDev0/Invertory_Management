@@ -14,7 +14,7 @@ import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch"; // Import ShadCN Switch component
 
-export default function AllUsers({ setActiveSection, setuserData }) {
+export default function AllUsers({ setActiveSection, setUserData }) {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,7 +39,7 @@ export default function AllUsers({ setActiveSection, setuserData }) {
   const handleAction = async (action, user) => {
     if (action === "edit") {
       setActiveSection("add-user");
-      setuserData(user);
+      setUserData(user);
     } else if (action === "delete") {
       setSelectedUser(user);
       setIsDialogOpen(true);
@@ -88,7 +88,7 @@ export default function AllUsers({ setActiveSection, setuserData }) {
         </div>
         <div className="flex gap-4">
           <Button onClick={() => setActiveSection('add-user')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
-          <Button className="bg-blue-500 text-white hover:bg-blue-600">Export</Button>
+          
         </div>
       </div>
 

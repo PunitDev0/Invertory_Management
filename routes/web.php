@@ -20,25 +20,25 @@ Route::get('/logout', [AuthController::class, 'logout']);
 Route::get('/logged-in-user', [AuthController::class, 'getLoggedInUser']);
 
 Route::group(['middleware' => 'auth'], function() {
-    Route::get('/admin/dashboard', function () {
-        return Inertia::render('Dashboard');
-    });
     
     
-    Route::post('/add-product', [ProductController::class, 'addProduct']);
-    Route::post('/add-product-name', [ProductController::class, 'AddProductName']);
-    Route::post('/add-categories', [ProductController::class, 'AddCategory']);
-    Route::get('/getcategories', [ProductController::class, 'getAllCategories']);
-    Route::get('/get-product-names', [ProductController::class, 'getAllProductNames']);
-    Route::get('/get-all-products', [ProductController::class, 'getAllProduct']);
-    Route::post('/add-roles', [AuthController::class, 'Role']);
-    Route::get('/get-all-roles', [AuthController::class, 'getAllRoles']);
-    Route::get('/get-all-users', [AuthController::class, 'getAllUsers']);
-    Route::put('/update-user/{id}', [UpdateController::class, 'updateUser']);
-    Route::delete('/delete-user/{id}', [UpdateController::class, 'deleteUser']);
-    Route::put('/product-update/{id}', [UpdateController::class, 'updateProduct']);
-    Route::delete('/product-delete/{id}', [UpdateController::class, 'deleteProduct']);
-    Route::get('/get-all-orders', [OrderController::class, 'getAllOrders']);
+    
 });
-
+Route::get('/admin/dashboard', function () {
+    return Inertia::render('Dashboard');
+});
+Route::post('/add-product', [ProductController::class, 'addProduct']);
+Route::post('/add-product-name', [ProductController::class, 'AddProductName']);
+Route::post('/add-categories', [ProductController::class, 'AddCategory']);
+Route::get('/getcategories', [ProductController::class, 'getAllCategories']);
+Route::get('/get-product-names', [ProductController::class, 'getAllProductNames']);
+Route::get('/get-all-products', [ProductController::class, 'getAllProduct']);
+Route::post('/add-roles', [AuthController::class, 'Role']);
+Route::get('/get-all-roles', [AuthController::class, 'getAllRoles']);
+Route::get('/get-all-users', [AuthController::class, 'getAllUsers']);
+Route::put('/update-user/{id}', [UpdateController::class, 'updateUser']);
+Route::delete('/delete-user/{id}', [UpdateController::class, 'deleteUser']);
+Route::put('/product-update/{id}', [UpdateController::class, 'updateProduct']);
+Route::delete('/product-delete/{id}', [UpdateController::class, 'deleteProduct']);
+Route::get('/get-all-orders', [OrderController::class, 'getAllOrders']);
     // NikatbyIMS@4077

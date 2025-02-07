@@ -17,7 +17,8 @@ export default function AddUserForm({UserData}) {
   const [newRole, setNewRole] = useState("");
   const [roles, setRoles] = useState([]);
 //  console.log(UserData);
- 
+  console.log(UserData);
+  
   const form = useForm({
     defaultValues: {
       name: UserData?.name || "",
