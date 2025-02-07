@@ -24,7 +24,7 @@ class AuthController extends Controller
         $user = User::where('email', $validated['email'])->first();
 
         // Check if the user exists and the password matches
-        if ($user && $user->password === $validated['password']) {
+        if ($user && Hash::check($validated['password'], $user->password)) {
             Auth::login($user);
 
             // Return a success response, but no redirect here
@@ -35,7 +35,7 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Invalid credentials'], 401);
-    }
+            }
 
     // Register method
     public function store(Request $request)
