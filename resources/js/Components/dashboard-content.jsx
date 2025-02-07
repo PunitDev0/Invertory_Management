@@ -1,12 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts"
-import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Navbar } from "./navbar"
-import { FaShoppingCart, FaBox, FaArrowUp, FaDollarSign, FaUsers, FaRegClock, FaRupeeSign } from 'react-icons/fa';  // Importing icons
-import { User2 } from "lucide-react"
-import { fetchOrders } from "@/lib/Apis"
-import { useEffect, useState } from "react"
+import { FaShoppingCart, FaBox, FaUsers, FaRupeeSign } from 'react-icons/fa';
 
 const weeklyData = [
   { day: "Mon", value: 10000 },
@@ -18,41 +13,11 @@ const weeklyData = [
   { day: "Sun", value: 25000 },
 ]
 
-const recentSales = [
-  { name: "Steven Summer", amount: 52.0, time: "02 Minutes Ago" },
-  { name: "Jordan Maizee", amount: 83.0, time: "02 Minutes Ago" },
-  { name: "Jessica Alba", amount: 61.6, time: "05 Minutes Ago" },
-  { name: "Anna Armas", amount: 2351.0, time: "05 Minutes Ago" },
-  { name: "Angelina Boo", amount: 152.0, time: "10 Minutes Ago" },
-  { name: "Anastasia Koss", amount: 542.0, time: "12 Minutes Ago" },
-]
-
-const lastOrders = [
-  { name: "David Astee", amount: 1456, status: "Chargeback", date: "11 Sep 2022" },
-  { name: "Maria Hulama", amount: 42437.8, status: "Completed", date: "11 Sep 2022" },
-  { name: "Arnold Swarz", amount: 3412, status: "Completed", date: "11 Sep 2022" },
-]
-
-export function DashboardContent() {
-   const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true); // to show loading state
+export function DashboardContent({ productData = [], orders = [], UserData = [] }) {
+  // Calculate total revenue from orders
+  const totalRevenue = orders.reduce((acc, order) => acc + (order.total || 0), 0);
+  console.log(productData);
   
-    useEffect(() => {
-      // Fetch orders on component mount
-      const getOrders = async () => {
-        try {
-          const fetchedOrders = await fetchOrders();
-
-          setOrders(fetchedOrders);
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-          setLoading(false);
-        }
-      };
-      getOrders();
-    }, []);
-
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 2xl:p-16 relative">
       <div className="max-w-[2000px] mx-auto space-y-8">
@@ -61,13 +26,14 @@ export function DashboardContent() {
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className="p-6 bg-[#E5EDE5]  items-center justify-between">
+          {/* Total Orders Card */}
+          <Card className="p-6 bg-[#E5EDE5] items-center justify-between">
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 <FaShoppingCart />
                 Total Orders
               </div>
-              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-2xl font-bold mb-4">{orders.length}</div>
               <div className="text-sm text-green-600">+17%</div>
             </div>
             <ResponsiveContainer height={50}>
@@ -83,13 +49,15 @@ export function DashboardContent() {
             </ResponsiveContainer>
           </Card>
 
-          <Card className="p-6 bg-[#FFE9B6]  items-center justify-between">
+          {/* Total Products Card */}
+          <Card className="p-6 bg-[#FFE9B6] items-center justify-between">
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 <FaBox />
                 Total Products
               </div>
-              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-2xl font-bold mb-4">{productData.length}</div>
+              {productData}
               <div className="text-sm text-yellow-600">+23%</div>
             </div>
             <ResponsiveContainer height={50}>
@@ -104,13 +72,15 @@ export function DashboardContent() {
               </LineChart>
             </ResponsiveContainer>
           </Card>
-          <Card className="p-6 bg-[#ffb6b6]  items-center justify-between">
+
+          {/* Unique Customers Card */}
+          <Card className="p-6 bg-[#ffb6b6] items-center justify-between">
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 <FaUsers />
                 Unique Customers
               </div>
-              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-2xl font-bold mb-4">{UserData.length}</div>
               <div className="text-sm text-green-600">+23%</div>
             </div>
             <ResponsiveContainer height={50}>
@@ -125,13 +95,18 @@ export function DashboardContent() {
               </LineChart>
             </ResponsiveContainer>
           </Card>
-          <Card className="p-6 bg-[#cdffb6]  items-center justify-between">
+
+          {/* Total Revenue Card */}
+          <Card className="p-6 bg-[#cdffb6] items-center justify-between">
             <div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
-                <FaUsers />
-                Unique Customers
+                <FaRupeeSign />
+                Total Revenue
               </div>
-              <div className="text-2xl font-bold mb-4 flex items-center"><FaRupeeSign size={20}/> 56,874</div>
+              <div className="text-2xl font-bold mb-4 flex items-center">
+                <FaRupeeSign size={20} /> 
+                {totalRevenue.toLocaleString('en-IN')}
+              </div>
               <div className="text-sm text-green-600">+23%</div>
             </div>
             <ResponsiveContainer height={50}>
@@ -148,11 +123,12 @@ export function DashboardContent() {
           </Card>
         </div>
 
+        {/* Charts Section */}
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <Card className="p-6">
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold">User in The Last Week</h3>
+                <h3 className="font-semibold">Users in The Last Week</h3>
                 <div className="text-2xl font-bold text-green-600">+ 3.2%</div>
               </div>
               <Button variant="ghost" className="shrink-0">
@@ -186,71 +162,12 @@ export function DashboardContent() {
             </div>
           </Card>
         </div>
-
-        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          {/* <Card className="p-6">
-            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="font-semibold">Last Orders</h3>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="text-sm text-gray-500">Data Updates Every 3 Hours</div>
-                <Button variant="ghost" className="text-sm">
-                  View All Orders
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-4">
-              {lastOrders.map((order) => (
-                <div
-                  key={order.name}
-                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <div className="w-10 h-10 rounded-full bg-gray-200" />
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{order.name}</div>
-                      <div className="text-sm text-gray-500">${order.amount}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-4 sm:gap-8">
-                    <div className="text-sm text-gray-500">{order.status}</div>
-                    <div className="text-sm text-gray-500">{order.date}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card> */}
-
-          {/* <Card className="p-6">
-            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="font-semibold">Recent Sales</h3>
-              <Button variant="ghost" className="text-sm">
-                See All
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {recentSales.map((sale) => (
-                <div key={sale.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <div className="w-10 h-10 rounded-full bg-gray-200" />
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{sale.name}</div>
-                      <div className="text-sm text-gray-500">{sale.time}</div>
-                    </div>
-                  </div>
-                  <div className="text-green-600 font-medium">+${sale.amount}</div>
-                </div>
-              ))}
-            </div>
-          </Card> */}
-        </div>
       </div>
     </div>
   );
 }
 
+// PieChart component remains the same
 function PieChart({ data }) {
   return (
     <div className="relative">

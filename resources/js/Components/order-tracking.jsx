@@ -149,7 +149,7 @@ export default function OrderTracking() {
                     <TableCell className="p-4 text-gray-700">{order.id}</TableCell>
                     <TableCell className="p-4 text-gray-700">{order.user_id}</TableCell>
                     <TableCell className="p-4 text-gray-700">{order.created_at}</TableCell>
-                    <TableCell className="p-4 text-gray-700">${order.price}</TableCell>
+                    <TableCell className="p-4 text-gray-700">{order.price}</TableCell>
                     <TableCell className="p-4 text-gray-700">{order.quantity}</TableCell>
                     <TableCell className="p-4 flex items-center gap-2 justify-end">
                       {/* <Select

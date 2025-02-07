@@ -102,7 +102,7 @@ export default function AllProducts({ setActiveSection, setproductData }) {
                       <TableRow key={product.id}>
                         <TableCell>{product.productName}</TableCell>
                         <TableCell>{product.category}</TableCell>
-                        <TableCell>${product.price}</TableCell>
+                        <TableCell>{product.price}</TableCell>
                         <TableCell>
                           <Badge className={product.stock_quantity > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
                             {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity})` : "Out of Stock"}

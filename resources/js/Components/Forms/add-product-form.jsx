@@ -353,7 +353,7 @@ export function AddProductForm({productData}) {
             />
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full">Add Product</Button>
+            <Button type="submit" className="w-full">{productData ? "Update Product" : "Add Product"}</Button>
           </form>
         </Card>
       </div>

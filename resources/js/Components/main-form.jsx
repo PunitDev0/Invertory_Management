@@ -81,7 +81,7 @@ export default function MainForm({productData}) {
                         <TableCell className="py-4">{product.id}</TableCell>
                         <TableCell className="font-medium">{product.productName}</TableCell>
                         <TableCell>{product.category}</TableCell>
-                        <TableCell className="font-mono">${product.price}</TableCell>
+                        <TableCell className="font-mono">{product.price}</TableCell>
                       </TableRow>
                     ))
                   ) : (
