@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "react-toastify";
 
 export function LoginForm({
   className,
@@ -42,13 +43,14 @@ export function LoginForm({
       console.log("Login successful:", response);
       if (response.data.redirect) {
         // Redirect using Inertia's client-side navigation
-        // Inertia.visit(response.data.redirect);
-        window.location.href ='/admin/dashboard'
+        Inertia.visit(response.data.redirect);
+        // window.location.href ='/admin/dashboard'
       }
     } catch (err) {
       // Handle error (e.g., display error message)
       setError("Invalid email or password.");
       console.error("Login error:", err);
+      toast.error(err.response.data.message);
     } finally {
       setLoading(false);
     }

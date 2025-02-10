@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { Button } from "./ui/button";
 import { fetchOrders } from "@/lib/Apis"; // Import the fetchOrders function
+import { IndianRupee } from "lucide-react";
 
 const weeklyData = [
   { day: "Mon", value: 10000 },
@@ -21,6 +22,7 @@ const weeklyData = [
 export default function OrderTracking() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true); // to show loading state
+  const [selectedOrder, setSelectedOrder] = useState(null); // to store the selected order details
 
   useEffect(() => {
     // Fetch orders on component mount
@@ -46,84 +48,29 @@ export default function OrderTracking() {
   };
 
   const totalOrders = orders.length;
-  // const totalPrice = orders.reduce((sum, order) => sum + order.price, 0).toFixed(2);
-  // const totalQuantity = orders.reduce((sum, order) => sum + order.quantity, 0);
   const successOrders = orders.filter(order => order.status === "Success").length;
+
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+  };
+
+  const closeModal = () => {
+    setSelectedOrder(null);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { weekday: 'short', month: 'short', year: 'numeric' });
+  };
+  
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="p-6 flex flex-col items-center bg-gray-50 min-h-screen">
-      <Card className="grid gap-6 grid-cols-2 xl:grid-cols-4 w-full sticky top-16 z-50 p-4 mb-4 shadow-xl">
-        <Card className="p-6 bg-[#E5EDE5]">
-          <div className="flex justify-between mb-4">
-            <div className="text-sm text-gray-600">Total Orders</div>
-          </div>
-          <div className="text-2xl font-bold mb-4">{totalOrders}</div>
-          <ResponsiveContainer height={50}>
-            <LineChart data={weeklyData}>
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#4CAF50"
-                strokeWidth={2}
-                dot={false} />
-              <Tooltip />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6 bg-[#FFE9B6]">
-          <div className="flex justify-between mb-4">
-            <div className="text-sm text-gray-600">Total Price</div>
-          </div>
-          {/* <div className="text-2xl font-bold mb-4">${totalPrice}</div> */}
-          <ResponsiveContainer height={50}>
-            <LineChart data={weeklyData}>
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#FFA000"
-                strokeWidth={2}
-                dot={false} />
-              <Tooltip />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6 bg-[#8B8BFF] text-white">
-          <div className="text-lg font-semibold mb-2">Total Quantity</div>
-          {/* <div className="text-2xl font-bold mb-4">{totalQuantity}</div> */}
-          <ResponsiveContainer height={50}>
-            <LineChart data={weeklyData}>
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#4CAF50"
-                strokeWidth={2}
-                dot={false} />
-              <Tooltip />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6 bg-[#8D6E63] text-white sm:col-span-2 xl:col-span-1">
-          <div className="text-lg font-semibold mb-2">Success Orders</div>
-          <p className="text-sm mb-4">{successOrders} Orders</p>
-          <ResponsiveContainer height={50}>
-            <LineChart data={weeklyData}>
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#FF5722"
-                strokeWidth={2}
-                dot={false} />
-              <Tooltip />
-            </LineChart>
-          </ResponsiveContainer>
-          <Button variant="secondary" className="w-full mt-4">
-            View Details
-          </Button>
-        </Card>
-      </Card>
+    
 
       <Card className="w-full shadow-xl rounded-xl bg-white">
         <CardContent className="p-8">
@@ -145,32 +92,20 @@ export default function OrderTracking() {
               </TableHeader>
               <TableBody>
                 {orders.map((order) => (
-                  <TableRow key={order.id} className="border-b hover:bg-gray-100">
-                    <TableCell className="p-4 text-gray-700">{order.id}</TableCell>
+                  <TableRow key={order.id} className="border-b hover:bg-gray-100" onClick={() => handleOrderClick(order)}>
+                    <TableCell className="p-4 text-gray-700">{order.product_name}</TableCell>
                     <TableCell className="p-4 text-gray-700">{order.user_id}</TableCell>
-                    <TableCell className="p-4 text-gray-700">{order.created_at}</TableCell>
-                    <TableCell className="p-4 text-gray-700">{order.price}</TableCell>
+                    <TableCell className="p-4 text-gray-700">{formatDate(order.created_at)} at {formatTime(order.created_at)}</TableCell>
+                    <TableCell className="p-4 text-gray-700">{order.product_price}</TableCell>
                     <TableCell className="p-4 text-gray-700">{order.quantity}</TableCell>
                     <TableCell className="p-4 flex items-center gap-2 justify-end">
-                      {/* <Select
-                        value={order.status}
-                        onValueChange={(value) => handleStatusChange(order.id, value)}
-                      >
-                        <SelectTrigger className="w-[130px] border-gray-300 rounded-md text-gray-700">
-                          <SelectValue placeholder="Select Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Success">Success</SelectItem>
-                        </SelectContent>
-                      </Select> */}
                       <Badge
                         className={cn(
                           "px-3 py-1 text-white text-sm rounded-full",
-                          order.status === "Success" ? "bg-green-500" : "bg-yellow-500"
+                          order.pending_payment !== "0" ? "bg-red-500" : "bg-green-500"
                         )}
                       >
-                        {order.status}
+                        {order.pending_payment !== "0" ? "Pending" : "Paid"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -180,6 +115,37 @@ export default function OrderTracking() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal for Order Details */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-1/2 p-6">
+            <CardContent>
+              <h2 className="text-2xl font-bold mb-4">Order Details</h2>
+              <div className="space-y-4">
+                <p><strong>ID:</strong> {selectedOrder.id}</p>
+                <p><strong>User ID:</strong> {selectedOrder.user_id}</p>
+                <p><strong>Product ID:</strong> {selectedOrder.product_id}</p>
+                <p><strong>Product Name:</strong> {selectedOrder.product_name}</p>
+                <p><strong>Order Date:</strong> {formatDate(selectedOrder.created_at)} at {formatTime(selectedOrder.created_at)}</p>
+                <p><strong>Updated At:</strong> {formatDate(selectedOrder.updated_at)} at {formatTime(selectedOrder.updated_at)}</p>
+                <p><strong>Quantity:</strong> {selectedOrder.quantity}</p>
+                <p className="flex items-center"><strong>Product Price:</strong> <IndianRupee size={20}/>{selectedOrder.product_price}</p>
+                <p><strong>User Name:</strong> {selectedOrder.user_name}</p>
+                <p><strong>User Email:</strong> {selectedOrder.user_email}</p>
+                <p><strong>User Phone:</strong> {selectedOrder.user_phone}</p>
+                <p><strong>User Address:</strong> {selectedOrder.user_address}</p>
+                <p><strong>User City:</strong> {selectedOrder.user_city}</p>
+                <p><strong>User Zip:</strong> {selectedOrder.user_zip}</p>
+                <p className="flex items-center"><strong>Paid Payment:</strong> <IndianRupee size={20}/>{selectedOrder.paid_payment}</p>
+                <p className="flex items-center"><strong>Pending Payment:</strong> <IndianRupee size={20}/>{selectedOrder.pending_payment}</p>
+                <p className="flex items-center"><strong>Total Amount:</strong> <IndianRupee size={20}/>{selectedOrder.total_amount}</p>
+              </div>
+              <Button onClick={closeModal} className="mt-4">Close</Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
