@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\productName;
+use App\Models\ProductName;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
@@ -44,7 +44,7 @@ class ProductController extends Controller
             'category_id' => 'required|integer|exists:categories,id',
         ]);
 
-        $product = productName::create([
+        $product = ProductName::create([
             'name' => $request->name,
             'category_id' => $request->category_id,
         ]);
@@ -92,7 +92,7 @@ class ProductController extends Controller
     // Function to get all product names
     public function getAllProductNames()
     {
-        $productNames = productName::all();
+        $productNames = ProductName::all();
         return response()->json(['productNames' => $productNames], 200);
     }
 

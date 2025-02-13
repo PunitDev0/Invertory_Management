@@ -10,32 +10,25 @@ class OrderController extends Controller
 {
     public function getAllOrders(Request $request)
     {
-        // Fetch all orders
+
         $orders = Order::select(
-                'id',
-                'user_name',
-                'user_email',
-                'user_phone',
-                'user_address',
-                'user_city',
-                'user_zip',
-                'paid_payment',
-                'total_amount',
-                'pending_payment',
-                'products',
-                'created_at',
-                'updated_at'
-            )
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Decode the JSON `products` field
-        $orders->transform(function ($order) {
-            $order->products = json_decode($order->products, true);
-            return $order;
-        });
-
-        // Render the `Dashboard` component using Inertia
-        return Inertia::render('Dashboard', ['userorders' => $orders]);
+            'orders.id',
+            'orders.quantity',
+            'orders.total_price',
+            'orders.Paid_Amount',
+            'orders.Remaing_Amount',
+            'orders.status',
+            'orders.created_at',
+            'orders.updated_at',
+            'products.productName as product_name',
+            'users.name as user_name'
+        )
+        ->leftJoin('products', 'orders.product_id', '=', 'products.id')
+        ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+        ->get();
+       
+    
+        return response()->json(['orders' => $orders], 200);
     }
+    
 }

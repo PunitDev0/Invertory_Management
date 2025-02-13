@@ -27,8 +27,25 @@ class Order extends Model
         'products', // Store the products as a JSON field
     ];
 
-    // If the products column is a JSON field, you can cast it to an array
-    protected $casts = [
-        'products' => 'array',  // Automatically cast the 'products' field to an array
-    ];
+
+    // Define any relationships if needed, for example, to fetch the associated product and user
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        return date('d M y - h:i A', strtotime($value));
+    }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return date('d M y - h:i A', strtotime($value));
+    }
 }
