@@ -71,7 +71,7 @@ export default function AddUserForm({UserData}) {
       form.reset();
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error(`Error: ${error.response?.data?.message || "Failed to process request"}`);
+      toast.error(`Error: ${"Failed to process request"}`);
     } finally {
       setIsLoading(false);
     }

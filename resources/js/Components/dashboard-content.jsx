@@ -5,18 +5,27 @@ import { Button } from "./ui/button";
 
 export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = [] }) {
   // Calculate total revenue from orders
-  const totalRevenue = orders.reduce((acc, order) => acc + parseFloat((order.price || 0)), 0);
+  const totalRevenue = orders.reduce((acc, order) => acc + parseFloat(order.price || 0), 0);
 
   // Previous week's total data (you can modify this as per your requirement)
-  const previousOrders = orders.filter(order => new Date(order.updated_at) < new Date().setDate(new Date().getDate() - 7));
+  // const previousOrders = orders.filter(order => new Date(order.updated_at) < new Date().setDate(new Date().getDate() - 7));
   const previousProducts = GetAllProducts.filter(product => new Date(product.updated_at) < new Date().setDate(new Date().getDate() - 7));
   const previousUsers = AllUsers.filter(user => new Date(user.created_at) < new Date().setDate(new Date().getDate() - 7));
 
-  // Calculate percentage change for Total Orders
+  
+  
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  console.log(sevenDaysAgo);
+  
+  // Filter orders older than 7 days
+  const previousOrders = orders.filter(order => new Date(order.updated_at) < sevenDaysAgo);
+  
+  console.log(previousOrders);
+  // Calculate order change percentage
   const orderChange = previousOrders.length
-    ? ((orders.length - previousOrders.length) / previousOrders.length) * 100
-    : 0;
-
+      ? ((orders.length - previousOrders.length) / previousOrders.length) * 100
+      : 0;
   // Calculate percentage change for Total Products
   const productChange = previousProducts.length
     ? ((GetAllProducts.length - previousProducts.length) / previousProducts.length) * 100
@@ -28,20 +37,20 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
     : 0;
 
   // Calculate percentage change for Total Revenue
-  const previousRevenue = previousOrders.reduce((acc, order) => acc + parseFloat((order.price || 0)), 0);
+  const previousRevenue = previousOrders.reduce((acc, order) => acc + parseFloat(order.price || 0), 0);
   const revenueChange = previousRevenue
     ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
     : 0;
 
   // Data for charts (weekly data or any specific period)
   const weeklyOrders = orders.map(order => ({
-    date: order.updated_at,
-    value: order.price, // Total price for the order
+    date: new Date(order?.updated_at).getTime(), // Convert to timestamp for consistency
+    value: order.product_price, // Total price for the order
   }));
 
-  const weeklyProducts = GetAllProducts.map(Products => ({
-    date: Products.updated_at,
-    value: Products.price, // Price of the product
+  const weeklyProducts = GetAllProducts.map(product => ({
+    date: new Date(product.updated_at).getTime(), // Convert to timestamp for consistency
+    value: product.price, // Price of the product
   }));
 
   const weeklyUsers = AllUsers.reduce((acc, user) => {
@@ -82,9 +91,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 Total Orders
               </div>
               <div className="text-2xl font-bold mb-4">{orders.length}</div>
-              <div className={`text-sm ${orderChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {/* <div className={`text-sm ${orderChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {orderChange >= 0 ? '+' : ''}{orderChange.toFixed(2)}%
-              </div>
+              </div> */}
             </div>
             <ResponsiveContainer height={50}>
               <LineChart data={weeklyOrders}>
@@ -107,9 +116,10 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 Total Products
               </div>
               <div className="text-2xl font-bold mb-4">{GetAllProducts.length}</div>
-              <div className={`text-sm ${productChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {/* <div className={`text-sm ${productChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {productChange >= 0 ? '+' : ''}{productChange.toFixed(2)}%
-              </div>
+              </div> */}
+            </div>
             <ResponsiveContainer height={50}>
               <LineChart data={weeklyProducts}>
                 <Line
@@ -121,7 +131,6 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <Tooltip />
               </LineChart>
             </ResponsiveContainer>
-            </div>
           </Card>
 
           {/* Unique Customers Card */}
@@ -132,9 +141,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 Unique Customers
               </div>
               <div className="text-2xl font-bold mb-4">{AllUsers.length}</div>
-              <div className={`text-sm ${userChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {userChange >= 0 ? '+' : ''}{userChange.toFixed(2)}%
-              </div>
+              {/* <div className={`text-sm ${userChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {userChange >= 0 ? '+' : ''}{userChange}%
+              </div> */}
             </div>
             <ResponsiveContainer height={50}>
               <LineChart data={formattedData}>
@@ -160,9 +169,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <FaRupeeSign size={20} />
                 {totalRevenue.toLocaleString('en-IN')}
               </div>
-              <div className={`text-sm ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {revenueChange >= 0 ? '+' : ''}{revenueChange.toFixed(2)}%
-              </div>
+              {/* <div className={`text-sm ${revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {revenueChange >= 0 ? '+' : ''}{revenueChange}%
+              </div> */}
             </div>
             <ResponsiveContainer height={50}>
               <LineChart data={weeklyOrders}>
@@ -184,7 +193,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
             <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="font-semibold">Users in The Last Week</h3>
-                <div className="text-2xl font-bold text-green-600">+ 3.2%</div>
+                {/* <div className="text-2xl font-bold text-green-600">+ {userChange}%</div> */}
               </div>
               <Button variant="ghost" className="shrink-0">
                 See statistics for all time
@@ -201,28 +210,12 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
               </ResponsiveContainer>
             </div>
           </Card>
-
-          {/* <Card className="p-6 h-fit">
-            <div className="flex flex-col gap-2 mb-6 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="font-semibold">Monthly Profits</h3>
-              <div className="text-sm text-gray-500">Total Profit Growth of 26%</div>
-            </div>
-            <div className="">
-              <PieChart
-                data={[
-                  { name: "Giveaway", value: 60 },
-                  { name: "Affiliate", value: 24 },
-                  { name: "Offline", value: 16 },
-                ]} />
-            </div>
-          </Card> */}
         </div>
       </div>
     </div>
   );
 }
 
-// PieChart component remains the same
 function PieChart({ data }) {
   return (
     <div className="relative">
@@ -260,7 +253,7 @@ function PieChart({ data }) {
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
           <div className="text-3xl font-bold">$76,356</div>
-          <div className="text-sm text-gray-500">Total</div>
+          <div className="text-sm text-gray-500">Revenue</div>
         </div>
       </div>
     </div>

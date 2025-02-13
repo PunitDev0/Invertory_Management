@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch"; // Import ShadCN Switch component
+import { Switch } from "@/components/ui/switch";
 
 export default function AllUsers({ setActiveSection, setUserData }) {
   const [users, setUsers] = useState([]);
@@ -20,7 +20,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [status, setStatus] = useState(null); // Ensure correct status state
+  const [status, setStatus] = useState(null); 
 
   useEffect(() => {
     const getUsers = async () => {
@@ -34,7 +34,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
       }
     };
     getUsers();
-  }, []);
+  }, [users]);
 
   const handleAction = async (action, user) => {
     if (action === "edit") {
@@ -62,18 +62,28 @@ export default function AllUsers({ setActiveSection, setUserData }) {
 
   const toggleUserActiveStatus = async (user) => {
     try {
-      const updatedUser = { ...user, status: !user.status }; // Toggle the status field (active/inactive)
-      const response = await axios.put(`/update-user/${user.id}`, updatedUser); // Pass updated user object
-      console.log(response);
-
-      // Update user state locally
+      // Toggle status between 0 and 1
+      const updatedUser = { 
+        ...user, 
+        status: user.status === '1' ? 0 : 1 // If status is 1, set it to 0 (deactivated), else set it to 1 (activated)
+      };
+      
+      // Send the PUT request to update user
+      const response = await axios.put(`/update-user/${user.id}`, updatedUser);
+      
+      // Update the local state with the updated user data
       setUsers(users.map(u => (u.id === user.id ? updatedUser : u)));
-      toast.success(`User ${updatedUser.status ? "activated" : "deactivated"} successfully!`);
+      
+      // Show success toast
+      toast.success(`User ${updatedUser.status === 1 ? "activated" : "deactivated"} successfully!`);
     } catch (error) {
+      // Show error toast if update fails
       toast.error("Failed to update user status. Try again!");
       console.error("Error updating user status:", error);
     }
-  };
+};
+
+
 
   return (
     <div className="p-6 min-h-screen">
@@ -84,11 +94,10 @@ export default function AllUsers({ setActiveSection, setUserData }) {
       </div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4 max-w-lg border p-2 mt-4 mx-4 rounded-md bg-white shadow-sm">
-          {/* Search section can be added later if needed */}
+          {/* Add Search Section */}
         </div>
         <div className="flex gap-4">
           <Button onClick={() => setActiveSection('add-user')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
-          
         </div>
       </div>
 
@@ -108,7 +117,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
               </div>
             ) : (
               <div className="border rounded-lg overflow-auto shadow-lg">
-                <Table className="w-full min-w-[600px]">
+                <Table className="w-full min-w-[600px] sm:w-full">
                   <TableHeader className="bg-indigo-100">
                     <TableRow>
                       <TableHead className="text-center text-indigo-800">ID</TableHead>
@@ -116,7 +125,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
                       <TableHead className="text-center text-indigo-800">Email</TableHead>
                       <TableHead className="text-center text-indigo-800">Role</TableHead>
                       <TableHead className="text-center text-indigo-800">Created At</TableHead>
-                      <TableHead className="text-center text-indigo-800">Status</TableHead> {/* New Active Column */}
+                      <TableHead className="text-center text-indigo-800">Status</TableHead>
                       <TableHead className="text-center text-indigo-800">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -136,13 +145,12 @@ export default function AllUsers({ setActiveSection, setUserData }) {
                             {new Date(user.created_at).toLocaleString()}
                           </TableCell>
                           <TableCell className="text-center">
-                            {/* Check user status and display the Switch component */}
                             <Switch
-                              checked={user.status}  // Use correct field `status`
+                              checked={user.status === '1'} 
                               onCheckedChange={() => {
                                 toggleUserActiveStatus(user);
-                              }}  // Toggle function
-                              className={`${user.status ? 'bg-green-600' : 'bg-red-600'} rounded-full`}
+                              }}  
+                              className={`${user.status === 1 ? 'bg-green-600' : 'bg-red-600'} rounded-full`}
                             />
                           </TableCell>
 

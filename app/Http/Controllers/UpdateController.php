@@ -31,7 +31,7 @@ class UpdateController extends Controller
             'name'     => 'sometimes|string|max:255',
             'email'    => 'sometimes|email|unique:users,email,' . $user->id,
             'role'     => 'sometimes|string|max:255',
-            'status'   => 'sometimes|boolean', // Validate the status as a boolean (true/false)
+            'status'   => 'sometimes|in:0,1', // Validate that the status is either 0 or 1
           
         ]);
 
