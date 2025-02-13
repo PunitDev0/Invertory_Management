@@ -4,13 +4,13 @@ import { Button } from '../ui/button'; // Adjust the path
 import { Input } from '../ui/input'; // Adjust the path
 import { Card } from '../ui/card'; // Adjust the path
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form';
-import { addCategory } from '@/lib/Apis'; // Import API utility
+import { addCategory, fetchCategories } from '@/lib/Apis'; // Import API utility
 import { toast } from 'react-toastify'; // Import toast from react-toastify
 
 // Make sure to import the CSS for react-toastify
 import 'react-toastify/dist/ReactToastify.css';
 
-function AddCategoryForm() {
+function AddCategoryForm({setCategories}) {
   const methods = useForm();
   const { control, handleSubmit, formState: { errors }, reset } = methods;
   const [image, setImage] = useState(null); // State for storing the selected image
@@ -46,13 +46,29 @@ function AddCategoryForm() {
       setImage(null); // Reset image after successful submission
       setImagePreview(null); // Reset image preview
       toast.success('Category added successfully!');
-
       // Reset form after successful submission
     } catch (error) {
       console.error('Error adding category:', error.response?.data || error.message);
       toast.error('Failed to add category'); // Show error toast if adding category fails
     }
   };
+
+  useEffect(()=>{
+    onsub
+  })
+
+  useEffect(() => {
+      const getCategories = async () => {
+        try {
+          const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
+          setCategories(categoriesData);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      }
+  
+      getCategories()
+    }, [setImagePreview])
 
   return (
     <div className="max-w-2xl p-6 md:p-8 w-full mx-auto">

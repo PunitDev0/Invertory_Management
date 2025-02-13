@@ -37,5 +37,7 @@ class OrderController extends Controller
 
         // Render the `Dashboard` component using Inertia
         return Inertia::render('Dashboard', ['userorders' => $orders]);
+
     }
+    
 }
