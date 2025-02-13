@@ -1,34 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Button } from '../ui/button'; // Adjust the path
 import { Input } from '../ui/input'; // Adjust the path
 import { Card } from '../ui/card'; // Adjust the path
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form';
-import { addCategory } from '@/lib/Apis'; // Import API utility
+import { addCategory, fetchCategories } from '@/lib/Apis'; // Import API utility
 import { toast } from 'react-toastify'; // Import toast from react-toastify
 
 // Make sure to import the CSS for react-toastify
 import 'react-toastify/dist/ReactToastify.css';
 
-function AddCategoryForm() {
+function AddCategoryForm({setCategories}) {
   const methods = useForm();
   const { control, handleSubmit, formState: { errors }, reset } = methods;
+  const [image, setImage] = useState(null); // State for storing the selected image
+  const [imagePreview, setImagePreview] = useState(null); // State for storing image preview URL
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImage(file);
+
+      // Create a preview URL for the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file); // Read the file as a data URL
+    }
+  };
 
   const onSubmit = async (data) => {
     try {
-      const result = await addCategory(data); // Call the addCategory function from api.js
+      const formData = new FormData(); // Using FormData to send the data with the image
+      formData.append('name', data.name);
+      if (image) {
+        formData.append('image', image); // Append image if present
+      }
+
+      const result = await addCategory(formData); // Call the addCategory function from api.js
       console.log(result); // Optionally log the response
 
       // Show toast notification
       reset();
+      setImage(null); // Reset image after successful submission
+      setImagePreview(null); // Reset image preview
       toast.success('Category added successfully!');
-
       // Reset form after successful submission
     } catch (error) {
       console.error('Error adding category:', error.response?.data || error.message);
       toast.error('Failed to add category'); // Show error toast if adding category fails
     }
   };
+
+  useEffect(()=>{
+    onsub
+  })
+
+  useEffect(() => {
+      const getCategories = async () => {
+        try {
+          const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
+          setCategories(categoriesData);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      }
+  
+      getCategories()
+    }, [setImagePreview])
 
   return (
     <div className="max-w-2xl p-6 md:p-8 w-full mx-auto">
@@ -55,6 +95,38 @@ function AddCategoryForm() {
                 </FormItem>
               )}
             />
+
+            {/* Image Upload Field */}
+            <FormField
+              control={control}
+              name="image"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Category Image</FormLabel>
+                  <FormControl>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="p-2 border border-gray-300 rounded-md shadow-sm w-full"
+                    />
+                  </FormControl>
+                  {image && <p className="text-sm text-gray-500 mt-2">Selected Image: {image.name}</p>}
+                </FormItem>
+              )}
+            />
+
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="mt-4">
+                <h4 className="text-lg font-semibold">Image Preview:</h4>
+                <img
+                  src={imagePreview}
+                  alt="Category Preview"
+                  className="mt-2 w-full max-w-sm rounded-md"
+                />
+              </div>
+            )}
 
             <Button
               type="submit"

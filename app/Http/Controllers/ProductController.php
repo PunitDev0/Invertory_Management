@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\productName;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     // Function to add a product
@@ -55,11 +55,30 @@ class ProductController extends Controller
     // Function to add category
     public function AddCategory(Request $request)
     {
-        $request->validate([
+        // Validate input
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|unique:categories,name|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image file
         ]);
-
-        $category = Category::create(['name' => $request->name]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+    
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            // Store image in 'public/categories' directory and get the path
+            $imagePath = $image->store('categories', 'public');
+        }
+    
+        // Create new category record
+        $category = Category::create([
+            'name' => $request->name,
+            'image' => $imagePath, // Store the image path
+        ]);
+    
         return response()->json(['message' => 'Category added successfully!', 'category' => $category], 201);
     }
 

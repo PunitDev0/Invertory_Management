@@ -12,8 +12,10 @@ import AllUsers from "./all-users";
 import { fetchOrders, fetchProducts, fetchUsers } from "@/lib/Apis";
 import axios from "axios";
 
-export function DashboardPage() {
+export function DashboardPage({userorders}) {
   const [activeSection, setActiveSection] = useState("dashboard");
+  // console.log(userorders);
+  
   const [Id, setId] = useState();
   const [productData, setproductData] = useState();
   const [userData, setUserData] = useState();
@@ -88,7 +90,7 @@ export function DashboardPage() {
           {activeSection === "dashboard" && <DashboardContent orders={orders} GetAllProducts={GetAllProducts} AllUsers={AllUserData} />}
           {activeSection === "add-product" && <MainFrom Id={Id} productData={productData} />}
           {activeSection === "add-user" && <AddUserForm Id={Id} UserData={userData} />}
-          {activeSection === "order-tracking" && <OrdersTracking />}
+          {activeSection === "order-tracking" && <OrdersTracking userorders={userorders}/>}
           {activeSection === "all-products" && <AllProducts setActiveSection={setActiveSection} setId={setId} setproductData={setproductData} />}
           {activeSection === "all-users" && <AllUsers setActiveSection={setActiveSection} setId={setId} setUserData={setUserData} />}
         </main>

@@ -20,6 +20,9 @@ export default function MainForm({productData}) {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refetch, setrefetch] = useState(false)
+    const [categories, setCategories] = useState([])
+  
   console.log();
   
   useEffect(() => {
@@ -40,10 +43,10 @@ export default function MainForm({productData}) {
     <div className=" p-6">
       {/* Left Side - Forms */}
       <div className="space-y-6 grid md:grid-cols-2">
-        <AddProductForm productData={productData}/>
+        <AddProductForm productData={productData} refetch={refetch}/>
         <div>
-        <AddCategoryForm />
-        <AddProductName />
+        <AddCategoryForm setrefetch={setrefetch} setCategories={setCategories} />
+        <AddProductName refetch={refetch} categories={categories} />
         </div>
       </div>
 

@@ -9,23 +9,22 @@ import { fetchCategories, addProductName } from '@/lib/Apis'  // Import the API 
 import { toast } from 'react-toastify'  // Import Toastify
 import 'react-toastify/dist/ReactToastify.css'  // Import Toastify CSS
 
-function AddProductName() {
+function AddProductName({categories}) {
   const methods = useForm()
   const { control, handleSubmit, formState: { errors }, reset } = methods
-  const [categories, setCategories] = useState([])
 
-  useEffect(() => {
-    const getCategories = async () => {
-      try {
-        const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    }
+  // useEffect(() => {
+  //   const getCategories = async () => {
+  //     try {
+  //       const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
+  //       setCategories(categoriesData);
+  //     } catch (error) {
+  //       console.error('Error fetching categories:', error);
+  //     }
+  //   }
 
-    getCategories()
-  }, [])
+  //   getCategories()
+  // }, [refetch])
 
   const onSubmit = async (data) => {
     try {
