@@ -24,9 +24,8 @@ Route::group(['middleware' => 'auth'], function() {
     
     
 });
-Route::get('/admin/dashboard', function () {
-    return Inertia::render('Dashboard');
-});
+Route::get('/admin/dashboard', [OrderController::class, 'getAllOrders']);
+
 Route::post('/add-product', [ProductController::class, 'addProduct']);
 Route::post('/add-product-name', [ProductController::class, 'AddProductName']);
 Route::post('/add-categories', [ProductController::class, 'AddCategory']);

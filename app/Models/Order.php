@@ -9,24 +9,26 @@ class Order extends Model
     use HasFactory;
 
     // Specify the table name (optional if the table name is pluralized version of the model)
-    protected $table = 'orders';
+    // The table associated with the model
+    protected $table = 'userorders';
 
-    // Define the fillable properties
+    // The attributes that are mass assignable
     protected $fillable = [
         'user_id',
-        'product_id',
-        'quantity',
-        'status',
+        'user_name',
+        'user_email',
+        'user_phone',
+        'user_address',
+        'user_city',
+        'user_zip',
+        'paid_payment',
+        'total_amount',
+        'pending_payment',
+        'products', // Store the products as a JSON field
     ];
 
-    // Define any relationships if needed, for example, to fetch the associated product and user
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // If the products column is a JSON field, you can cast it to an array
+    protected $casts = [
+        'products' => 'array',  // Automatically cast the 'products' field to an array
+    ];
 }
