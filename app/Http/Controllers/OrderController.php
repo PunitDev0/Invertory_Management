@@ -9,10 +9,24 @@ class OrderController extends Controller
 {
     public function getAllOrders(Request $request)
     {
-        // Fetch all orders (add pagination or filtering as needed)
-        $orders = Order::all(); 
-
-        // Return the orders as a JSON response
+        $orders = Order::select(
+            'orders.id',
+            'orders.quantity',
+            'orders.total_price',
+            'orders.Paid_Amount',
+            'orders.Remaing_Amount',
+            'orders.status',
+            'orders.created_at',
+            'orders.updated_at',
+            'products.productName as product_name',
+            'users.name as user_name'
+        )
+        ->leftJoin('products', 'orders.product_id', '=', 'products.id')
+        ->leftJoin('users', 'orders.user_id', '=', 'users.id')
+        ->get();
+       
+    
         return response()->json(['orders' => $orders], 200);
     }
+    
 }

@@ -29,4 +29,14 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        return date('d M y - h:i A', strtotime($value));
+    }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return date('d M y - h:i A', strtotime($value));
+    }
 }
