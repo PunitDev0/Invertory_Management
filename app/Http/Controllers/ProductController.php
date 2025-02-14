@@ -36,64 +36,36 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product added successfully!', 'product' => $product], 201);
     }
     
-    // Function to add product name
-    public function AddProductName(Request $request)
+
+    public function updateProduct(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|integer|exists:categories,id',
-        ]);
-
-        $product = ProductName::create([
-            'name' => $request->name,
-            'category_id' => $request->category_id,
-        ]);
-
-        return response()->json(['message' => 'Product name added successfully!', 'product' => $product], 201);
-    }
-
-    // Function to add category
-    public function AddCategory(Request $request)
-    {
-        // Validate input
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|unique:categories,name|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image file
+            'productName' => 'sometimes|string|max:255',
+            'companyName' => 'sometimes|string|max:255',
+            'category' => 'sometimes|string|max:255',
+            'owned_imported' => 'sometimes|in:owned,imported',
+            'price' => 'sometimes|numeric',
+            'stock_quantity' => 'sometimes|integer',
+            'description' => 'sometimes|string',
         ]);
     
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        $product = Product::findOrFail($id);
+        $product->update($request->all());
+    
+        return response()->json(['message' => 'Product updated successfully!', 'product' => $product], 200);
+    }
+
+    public function deleteProduct($id)
+    {
+        $product = Product::find($id);
+        
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
         }
-    
-        // Handle image upload
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            // Store image in 'public/categories' directory and get the path
-            $imagePath = $image->store('categories', 'public');
-        }
-    
-        // Create new category record
-        $category = Category::create([
-            'name' => $request->name,
-            'image' => $imagePath, // Store the image path
-        ]);
-    
-        return response()->json(['message' => 'Category added successfully!', 'category' => $category], 201);
-    }
-
-    // Function to get all categories
-    public function getAllCategories()
-    {
-        $categories = Category::all();
-        return response()->json(['categories' => $categories], 200);
-    }
-
-    // Function to get all product names
-    public function getAllProductNames()
-    {
-        $productNames = ProductName::all();
-        return response()->json(['productNames' => $productNames], 200);
+        
+        $product->delete();
+        
+        return response()->json(['message' => 'Product deleted successfully'], 200);
     }
 
     // Function to get all products with category details

@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import AddShopForm from "./Forms/add-shops-form";
 
 export default function MainForm({productData}) {
   const [products, setProducts] = useState([]);
@@ -43,12 +44,13 @@ export default function MainForm({productData}) {
   return (
     <div className=" p-6">
       {/* Left Side - Forms */}
-      <div className="space-y-6 grid md:grid-cols-2">
+      <div className="space-y-6 grid xl:grid-cols-3 lg:grid-cols-2">
         <AddProductForm productData={productData} productsName={productsName}/>
-        <div>
+        <div className="w-full">
         <AddCategoryForm setrefetch={setrefetch} setCategories={setCategories} />
         <AddProductName refetch={refetch} categories={categories} setProductsName={setProductsName}/>
         </div>
+        <AddShopForm/>
       </div>
 
       {/* Right Side - Table */}

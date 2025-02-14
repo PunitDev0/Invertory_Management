@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fetchProducts } from "@/lib/Apis";
+import { deleteProducts, fetchProducts } from "@/lib/Apis";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon, CubeIcon } from "@radix-ui/react-icons";
@@ -48,7 +48,8 @@ export default function AllProducts({ setActiveSection, setproductData }) {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`/product-delete/${selectedProduct.id}`);
+      await deleteProducts(selectedProduct.id)
+      // await axios.delete(`/products/delete/${selectedProduct.id}`);
       setProducts((prevProducts) => prevProducts.filter((p) => p.id !== selectedProduct.id));
       toast.success("Product deleted successfully!");
     } catch (error) {
