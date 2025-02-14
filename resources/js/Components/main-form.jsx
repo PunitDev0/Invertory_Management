@@ -22,6 +22,7 @@ export default function MainForm({productData}) {
   const [error, setError] = useState(null);
   const [refetch, setrefetch] = useState(false)
     const [categories, setCategories] = useState([])
+    const [productsName, setProductsName] = useState([]);
   
   console.log();
   
@@ -43,10 +44,10 @@ export default function MainForm({productData}) {
     <div className=" p-6">
       {/* Left Side - Forms */}
       <div className="space-y-6 grid md:grid-cols-2">
-        <AddProductForm productData={productData} refetch={refetch}/>
+        <AddProductForm productData={productData} productsName={productsName}/>
         <div>
         <AddCategoryForm setrefetch={setrefetch} setCategories={setCategories} />
-        <AddProductName refetch={refetch} categories={categories} />
+        <AddProductName refetch={refetch} categories={categories} setProductsName={setProductsName}/>
         </div>
       </div>
 

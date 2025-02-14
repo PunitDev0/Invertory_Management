@@ -1,65 +1,58 @@
-import React, { useEffect, useState } from 'react'
-import { useForm, Controller, FormProvider } from 'react-hook-form'
-import { Button } from '../ui/button'  // Adjust path
-import { Input } from '../ui/input'  // Adjust path
-import { Card } from '../ui/card' // Adjust path
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/Components/ui/select'
-import { fetchCategories, addProductName } from '@/lib/Apis'  // Import the API functions
-import { toast } from 'react-toastify'  // Import Toastify
-import 'react-toastify/dist/ReactToastify.css'  // Import Toastify CSS
+import React, { useEffect, useState } from 'react';
+import { useForm, Controller, FormProvider } from 'react-hook-form';
+import { Button } from '../ui/button'; // Adjust path
+import { Input } from '../ui/input'; // Adjust path
+import { Card } from '../ui/card'; // Adjust path
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/Components/ui/select';
+import { fetchCategories, addProductName, fetchProductNames } from '@/lib/Apis'; // Import the API functions
+import { toast } from 'react-toastify'; // Import Toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
-function AddProductName({categories}) {
-  const methods = useForm()
-  const { control, handleSubmit, formState: { errors }, reset } = methods
-
-  // useEffect(() => {
-  //   const getCategories = async () => {
-  //     try {
-  //       const categoriesData = await fetchCategories();  // Use fetchCategories from api.js
-  //       setCategories(categoriesData);
-  //     } catch (error) {
-  //       console.error('Error fetching categories:', error);
-  //     }
-  //   }
-
-  //   getCategories()
-  // }, [refetch])
+function AddProductName({ categories, setProductsName }) {
+  const methods = useForm();
+  const { control, handleSubmit, formState: { errors }, reset } = methods;
 
   const onSubmit = async (data) => {
     try {
       const payload = {
         name: data.product_category_name,
         category_id: data.category_id, // Send category_id
-      }
+      };
 
-      const response = await addProductName(payload); // Use addProductName from api.js
-      console.log('Success:', response)
-      
-      // Show success message
-      toast.success('Product Name Added Successfully!')
+      await addProductName(payload); // Use addProductName from api.js
+      toast.success('Product Name Added Successfully!');
 
-      // Reset form
-      reset()
+      // Fetch products again to update the list
+      fetchUpdatedProducts();
 
+      reset(); // Reset form
     } catch (error) {
-      console.error('Error adding product:', error)
-      
-      // Show error message
-      toast.error('Failed to add product')
+      console.error('Error adding product:', error);
+      toast.error('Failed to add product');
     }
-  }
+  };
+
+  const fetchUpdatedProducts = async () => {
+    try {
+      const response = await fetchProductNames(); // Fetch updated products
+      setProductsName(response);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUpdatedProducts();
+  }, []); // Runs once on component mount
 
   return (
     <div className="p-6 md:p-8 w-full mx-auto max-w-2xl">
-      {/* Add Product Name with Category Form */}
       <Card className="p-8 shadow-lg rounded-lg bg-white">
         <h3 className="text-2xl font-semibold mb-4 text-gray-800">Add Product Name with Category</h3>
 
-        {/* Wrap the form with FormProvider */}
         <FormProvider {...methods}>
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-
             {/* Product Name */}
             <FormField
               control={control}
@@ -80,7 +73,7 @@ function AddProductName({categories}) {
               )}
             />
 
-            {/* Category Selection (Sends category_id) */}
+            {/* Category Selection */}
             <FormField
               control={control}
               name="category_id"
@@ -103,7 +96,7 @@ function AddProductName({categories}) {
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map((category) => (
-                              <SelectItem key={category.id} value={String(category.id)}> {/* Convert ID to string */}
+                              <SelectItem key={category.id} value={String(category.id)}>
                                 {category.name}
                               </SelectItem>
                             ))}
@@ -127,7 +120,7 @@ function AddProductName({categories}) {
         </FormProvider>
       </Card>
     </div>
-  )
+  );
 }
 
-export default AddProductName
+export default AddProductName;

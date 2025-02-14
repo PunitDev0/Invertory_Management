@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 
-export function AddProductForm({productData}) {
+export function AddProductForm({productData, productsName}) {
   const methods = useForm({
     defaultValues: {
       productName: productData?.productName || "",
@@ -44,7 +44,6 @@ export function AddProductForm({productData}) {
 
   const { control, handleSubmit, setValue, register, formState: { errors }, reset } = methods;
   const [categories, setCategories] = useState([]);
-  const [productsName, setProductsName] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
