@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AddProductForm } from "./Forms/add-product-form";
-import AddCategoryForm from "./Forms/add-category-form";
-import AddProductName from "./Forms/add-product-name";
-import { fetchProducts, fetchShops } from "@/lib/Apis";
+import {fetchProducts, fetchShops, updateProducts } from "@/lib/Apis";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -16,14 +14,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
-export default function MainForm({productData}) {
+export default function AddProductPage({ id }) {
+  const [productData, setProductData] = useState(null);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-    const [productsName, setProductsName] = useState([]);
-  
-  console.log();
-  
+  const [productsName, setProductsName] = useState([]);
+  const [shops, setShops] = useState([]);
+
+  useEffect(() => {
+    const getProduct = async () => {
+      if (!id) return;
+      try {
+        const product = await updateProducts(id);
+        console.log(product);
+        
+        setProductData(product);
+      } catch (err) {
+        console.error("Error fetching product by ID:", err);
+      }
+    };
+    getProduct();
+  }, [id]);
+
   useEffect(() => {
     const getProducts = async () => {
       try {
@@ -38,23 +51,19 @@ export default function MainForm({productData}) {
     getProducts();
   }, []);
 
-    const [shops, setShops] = useState([]);  
-    const fetchAndSetShops = async () => {
-      try {
-        const shopsData = await fetchShops();
-        console.log(shopsData);
-        
-        setShops(shopsData);
-      } catch (error) {
-        console.error('Error fetching shops:', error);
-        toast.error('Failed to fetch shops');
-      }
-    };
+  const fetchAndSetShops = async () => {
+    try {
+      const shopsData = await fetchShops();
+      setShops(shopsData);
+    } catch (error) {
+      console.error("Error fetching shops:", error);
+    }
+  };
 
   return (
-    <div className=" md:p-6">
+    <div className="md:p-6">
       {/* Left Side - Forms */}
-        <AddProductForm productData={productData} productsName={productsName}/>
+      <AddProductForm productData={productData} productsName={productsName} />
 
       {/* Right Side - Table */}
       <Card className="shadow-lg rounded-xl bg-white">

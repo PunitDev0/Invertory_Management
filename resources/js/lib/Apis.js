@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const storeUserRole = async  (name)=>{
     try {
-        const response = await axios.post(`/add-roles`,{
+        const response = await axios.post(`/roles/create`,{
             name : name
         }); 
         return response.data;
@@ -15,9 +15,25 @@ export const storeUserRole = async  (name)=>{
 
 export const getUserRoles = async () => {
   try {
-    const response = await axios.get(`/get-all-roles`);
-    console.log(response);
+    const response = await axios.get(`/roles/list`);
     
+    return response.data.roles;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+
+
+export const addUsers = async (data) => {
+  try {
+    const response = await axios.post(`/users/register`, data);    
     return response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -27,13 +43,39 @@ export const getUserRoles = async () => {
 
 export const fetchUsers = async () => {
   try {
-    const response = await axios.get(`/get-all-users`);    
+    const response = await axios.get(`/users/list`);    
     return response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);
     throw error;
   }
 };
+
+export const updateUser = async (id, data) => {
+  try {
+    const response = await axios.put(`/users/update/${id}`, data);    
+    return response.data.user;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+export const deleteUser = async (id,) => {
+  try {
+    const response = await axios.delete(`/users/delete/${id}`);    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+
 
 // Fetch all product names
 export const fetchProductNames = async () => {
@@ -56,12 +98,29 @@ export const addProductName = async (payload) => {
     throw error;
   }
 };
+export const deleteProductName = async (id) => {
+  try {
+    const response = await axios.delete(`/product-names/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding product:', error);
+    throw error;
+  }
+};
+export const editProductName = async (id) => {
+  try {
+    const response = await axios.put(`/product-names/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding product:', error);
+    throw error;
+  }
+};
 
 
 export const fetchProducts = async () => {
     try {
       const response = await axios.get(`/products`);
-      console.log(response);
       return response.data.products; // Ensure this matches the Laravel API response
       
     } catch (error) {
@@ -73,7 +132,6 @@ export const fetchProducts = async () => {
 export const deleteProducts = async (id) => {
     try {
       const response = await axios.delete(`/products/delete/${id}`);
-      console.log(response);
       return response
       
     } catch (error) {
@@ -82,12 +140,10 @@ export const deleteProducts = async (id) => {
     }
   };
 
-  
 export const updateProducts = async (id, data) => {
     try {
       const response = await axios.put(`/products/update/${id}`, data);
-      console.log(response);
-      return response
+      return response.data.product
       
     } catch (error) {
       console.error('Error fetching products', error);
@@ -95,6 +151,10 @@ export const updateProducts = async (id, data) => {
     }
   };
   
+
+
+
+
 
 
 export const fetchCategories = async () => {
@@ -115,13 +175,41 @@ export const addCategory = async (data) => {
   } catch (error) {
     throw error;
   }
-};
+
+}
+
+export const deleteCategory = async (id) => {
+  try {
+    const response = await axios.delete(`/categories/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};  
+
+
+export const editCategory = async (id) => {
+  try {
+    const response = await axios.put(`/categories/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};  
+
+
+
+
+
+
+
 
 // Fetch all orders
 export const fetchOrders = async () => {
   try {
-    const response = await axios.get(`/get-all-orders`);
-    return response.data.orders; // Ensure this matches the Laravel API response
+    const response = await axios.get(`/orders/list`);
+    
+    return response.data.userorders    ; // Ensure this matches the Laravel API response
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
@@ -132,6 +220,27 @@ export const addShop = async (data) => {
   try {
     const response = await axios.post(`/shops`, data);
     return response
+  } catch (error) {
+    console.error('Not Store Shops Data', error);
+    throw error;
+  }
+};
+
+
+export const fetchShops = async () => {
+  try {
+    const response = await axios.get(`/shops`);
+    return response.data
+  } catch (error) {
+    console.error('Not Store Shops Data', error);
+    throw error;
+  }
+};
+
+export const deleteShops = async (id) => {
+  try {
+    const response = await axios.delete(`/shops/${id}`);
+    return response.data
   } catch (error) {
     console.error('Not Store Shops Data', error);
     throw error;

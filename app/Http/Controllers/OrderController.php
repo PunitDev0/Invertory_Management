@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class OrderController extends Controller
 {
     public function getAllOrders(Request $request)
     {
-        // Fetch all orders
+        // Fetch all orders and return as JSON
         $orders = Order::select(
                 'id',
                 'user_name',
@@ -35,9 +34,6 @@ class OrderController extends Controller
             return $order;
         });
 
-        // Render the `Dashboard` component using Inertia
-        return Inertia::render('Dashboard', ['userorders' => $orders]);
-
+        return response()->json(['userorders' => $orders], 200);
     }
-    
 }

@@ -1,40 +1,41 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\ProductName;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+
 class ProductController extends Controller
 {
     // Function to add a product
     public function addProduct(Request $request)
-    {
-        $request->validate([
-            'productName' => 'required|string|max:255',
-            'companyName' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'owned_imported' => 'required|in:owned,imported',
-            'price' => 'required|numeric',
-            'stock_quantity' => 'required|integer',
-            'description' => 'required|string',
-        ]);
-    
-        $product = Product::create([
-            'productName' => $request->productName,
-            'companyName' => $request->companyName,
-            'category' => $request->category,
-            'owned_imported' => $request->owned_imported,
-            'price' => $request->price,
-            'stock_quantity' => $request->stock_quantity,
-            'description' => $request->description,
-        ]);
-    
-        return response()->json(['message' => 'Product added successfully!', 'product' => $product], 201);
-    }
+{
+    // Validate the request data
+    $request->validate([
+        'productName' => 'required|string|max:255',
+        'companyName' => 'sometimes|string|max:255',
+        'shop_name' => 'sometimes|string|max:20', // Ensure shop_id is numeric
+        'category' => 'required|string|max:255',
+        'owned_imported' => 'required|in:owned,imported',
+        'price' => 'required|numeric',
+        'stock_quantity' => 'required|integer',
+        'description' => 'required|string',
+    ]);
+
+    // Create the product
+    $product = Product::create([
+        'productName' => $request->productName,
+        'companyName' => $request->companyName,
+        'shop_name' => $request->shop_name, // Store shop_id instead of shop_name
+        'category' => $request->category,
+        'owned_imported' => $request->owned_imported,
+        'price' => $request->price,
+        'stock_quantity' => $request->stock_quantity,
+        'description' => $request->description,
+    ]);
+
+    // Return a success response
+    return response()->json(['message' => 'Product added successfully!', 'product' => $product], 201);
+}
     
 
     public function updateProduct(Request $request, $id)
@@ -42,6 +43,7 @@ class ProductController extends Controller
         $request->validate([
             'productName' => 'sometimes|string|max:255',
             'companyName' => 'sometimes|string|max:255',
+            'shop_name' => 'sometimes|numeric|',
             'category' => 'sometimes|string|max:255',
             'owned_imported' => 'sometimes|in:owned,imported',
             'price' => 'sometimes|numeric',

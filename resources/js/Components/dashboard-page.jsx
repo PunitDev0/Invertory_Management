@@ -87,13 +87,7 @@ export function DashboardPage({userorders}) {
         </aside>
         <main className="flex-1 lg:pl-64">
           <Navbar className="lg:pl-64" setActiveSection={setActiveSection} />
-          {activeSection === "dashboard" && <DashboardContent orders={orders} GetAllProducts={GetAllProducts} AllUsers={AllUserData} />}
-          {activeSection === "add-product" && <MainFrom Id={Id} productData={productData} />}
-          {activeSection === "add-user" && <AddUserForm Id={Id} UserData={userData} />}
-          {activeSection === "order-tracking" && <OrdersTracking userorders={userorders}/>}
-          {activeSection === "all-products" && <AllProducts setActiveSection={setActiveSection} setId={setId} setproductData={setproductData} />}
-          {activeSection === "all-users" && <AllUsers setActiveSection={setActiveSection} setId={setId} setUserData={setUserData} />}
-        </main>
+       <DashboardContent orders={orders} GetAllProducts={GetAllProducts} AllUsers={AllUserData} />        </main>
       </div>
     </div>
   );

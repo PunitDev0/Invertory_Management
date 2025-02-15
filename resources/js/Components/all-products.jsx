@@ -6,14 +6,17 @@ import { deleteProducts, fetchProducts } from "@/lib/Apis";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ExclamationTriangleIcon, CubeIcon } from "@radix-ui/react-icons";
-import { Input } from "@/Components/ui/input";
-import { FaSearch } from "react-icons/fa";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/Components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
-// import { toast } from "react-hot-toast";
-import axios from "axios";
 import { toast } from "react-toastify";
+import { Link, usePage } from "@inertiajs/react"; // Import Inertia.js components
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AllProducts({ setActiveSection, setproductData }) {
   const [products, setProducts] = useState([]);
@@ -36,20 +39,19 @@ export default function AllProducts({ setActiveSection, setproductData }) {
     getProducts();
   }, []);
 
-  const handleAction = async (action, product) => {
-    if (action === "edit") {
-      setActiveSection("add-product");
-      setproductData(product);
-    } else if (action === "delete") {
+  const handleAction = (action, product) => {
+    if (action === "delete") {
       setSelectedProduct(product);
       setIsDialogOpen(true);
+    } else if (action === "edit") {
+      // Use Inertia.js to navigate to the edit page
+      window.location.href = `product/${product.id}`;
     }
   };
 
   const confirmDelete = async () => {
     try {
-      await deleteProducts(selectedProduct.id)
-      // await axios.delete(`/products/delete/${selectedProduct.id}`);
+      await deleteProducts(selectedProduct.id);
       setProducts((prevProducts) => prevProducts.filter((p) => p.id !== selectedProduct.id));
       toast.success("Product deleted successfully!");
     } catch (error) {
@@ -67,15 +69,15 @@ export default function AllProducts({ setActiveSection, setproductData }) {
         <CubeIcon className="h-8 w-8 text-blue-500" /> Product Inventory
       </h2>
       <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4 max-w-lg border p-2 mt-4 mx-4 rounded-md bg-white shadow-sm">
-              {/* <FaSearch className="text-gray-500" size={20} />
-              <Input className="outline-none border-none px-3 py-2 rounded-md text-gray-700" placeholder="Search..." /> */}
-            </div>
-            <div className="flex gap-4">
-              <Button onClick={() => setActiveSection('add-product')} className="bg-green-500 text-white hover:bg-green-600">Add New</Button>
-             
-            </div>
-          </div>
+        <div className="flex items-center gap-4 max-w-lg border p-2 mt-4 mx-4 rounded-md bg-white shadow-sm">
+          {/* Search functionality can be added here */}
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={() => setActiveSection("add-product")} className="bg-green-500 text-white hover:bg-green-600">
+            Add New
+          </Button>
+        </div>
+      </div>
       <Card className="w-full shadow-lg rounded-lg bg-white overflow-hidden mt-4">
         <CardContent className="py-0 px-2">
           <div className="p-6">
@@ -85,7 +87,11 @@ export default function AllProducts({ setActiveSection, setproductData }) {
                 <AlertDescription>Error loading products: {error}</AlertDescription>
               </Alert>
             ) : isLoading ? (
-              <div className="space-y-4">{[...Array(5)].map((_, i) => (<Skeleton key={i} className="h-12 w-full" />))}</div>
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
             ) : (
               <Table className="w-full">
                 <TableHeader>
@@ -94,6 +100,7 @@ export default function AllProducts({ setActiveSection, setproductData }) {
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
+                    <TableHead>Company/Branch Name</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -105,13 +112,22 @@ export default function AllProducts({ setActiveSection, setproductData }) {
                         <TableCell>{product.category}</TableCell>
                         <TableCell>{product.price}</TableCell>
                         <TableCell>
-                          <Badge className={product.stock_quantity > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
-                            {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity})` : "Out of Stock"}
+                          <Badge
+                            className={
+                              product.stock_quantity > 0
+                                ? "bg-green-500 text-white"
+                                : "bg-red-500 text-white"
+                            }
+                          >
+                            {product.stock_quantity > 0
+                              ? `In Stock (${product.stock_quantity})`
+                              : "Out of Stock"}
                           </Badge>
                         </TableCell>
+                        <TableCell>{product?.companyName || product?.shop_name}</TableCell>
                         <TableCell>
                           <Select onValueChange={(value) => handleAction(value, product)}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-[100px]">
                               <SelectValue placeholder="Actions" />
                             </SelectTrigger>
                             <SelectContent>
@@ -124,7 +140,9 @@ export default function AllProducts({ setActiveSection, setproductData }) {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan="5" className="text-center">No products found</TableCell>
+                      <TableCell colSpan="6" className="text-center">
+                        No products found
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -142,8 +160,12 @@ export default function AllProducts({ setActiveSection, setproductData }) {
           </DialogHeader>
           <p>Are you sure you want to delete {selectedProduct?.productName}?</p>
           <DialogFooter>
-            <Button onClick={() => setIsDialogOpen(false)} variant="outline">Cancel</Button>
-            <Button onClick={confirmDelete} className="bg-red-600 text-white hover:bg-red-700">Delete</Button>
+            <Button onClick={() => setIsDialogOpen(false)} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={confirmDelete} className="bg-red-600 text-white hover:bg-red-700">
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -5,8 +5,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductNameController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\UpdateController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,24 +23,38 @@ Route::get('/logout', [AuthController::class, 'logout']);
 Route::get('/logged-in-user', [AuthController::class, 'getLoggedInUser']);
 
 Route::group(['middleware' => 'auth'], function() {
-
     
 });
-// NikatbyIMS@4077
-Route::get('/admin/dashboard', [OrderController::class, 'getAllOrders']);
 
-Route::post('/add-product', [ProductController::class, 'addProduct']);
-Route::post('/add-product-name', [ProductController::class, 'AddProductName']);
-Route::get('/get-product-names', [ProductController::class, 'getAllProductNames']);
-Route::get('/get-all-products', [ProductController::class, 'getAllProduct']);
-Route::post('/add-roles', [AuthController::class, 'Role']);
-Route::get('/get-all-roles', [AuthController::class, 'getAllRoles']);
-Route::get('/get-all-users', [AuthController::class, 'getAllUsers']);
-Route::put('/update-user/{id}', [UpdateController::class, 'updateUser']);
-Route::delete('/delete-user/{id}', [UpdateController::class, 'deleteUser']);
-Route::put('/product-update/{id}', [ProductController::class, 'updateProduct']);
-Route::delete('/product-delete/{id}', [ProductController::class, 'deleteProduct']);
-Route::get('/get-all-orders', [OrderController::class, 'getAllOrders']);
+Route::get('/admin/dashboard', function(){
+    return Inertia::render('Dashboard');
+});
+Route::get('/admin/category', function(){
+    return Inertia::render('Category');
+});
+Route::get('/admin/productname', function(){
+    return Inertia::render('ProductName');
+});
+Route::get('/admin/branches', function(){
+    return Inertia::render('Shop');
+});
+Route::get('/admin/allproducts', function(){
+    return Inertia::render('AllProducts');
+});
+
+Route::get('/admin/product/{id?}', function( $id = null){
+    return Inertia::render('AddProduct', ['id' => $id]);
+});
+Route::get('/admin/user/{id?}', function( $id = null){
+    return Inertia::render('AddUser', ['id' => $id]);
+});
+Route::get('/admin/allusers', function(){
+    return Inertia::render('AllUsers');
+});
+Route::get('/admin/ordertracking', function(){
+    return Inertia::render('OrderTracking');
+});
+
 
 
 Route::prefix('shops')->group(function () {
@@ -70,4 +86,22 @@ Route::get('/', [ProductController::class, 'getAllProduct']);
 Route::post('/add', [ProductController::class, 'addProduct']);
 Route::put('/update/{id}', [ProductController::class, 'updateProduct']);
 Route::delete('/delete/{id}', [ProductController::class, 'deleteProduct']);
+});
+
+Route::prefix('roles')->group(function () {
+    Route::post('/create', [RoleController::class, 'store']);
+    Route::get('/list', [RoleController::class, 'getAllRoles']);
+});
+
+// User Routes
+Route::prefix('users')->group(function () {
+    Route::post('/register', [UserController::class, 'store']);
+    Route::get('/list', [UserController::class, 'getAllUsers']);
+    Route::delete('/delete/{id}', [UserController::class, 'deleteUser']);
+    Route::put('/update/{id}', [UserController::class, 'updateUser']);
+});
+
+
+Route::prefix('orders')->group(function () {
+    Route::get('/list', [OrderController::class, 'getAllOrders']);
 });

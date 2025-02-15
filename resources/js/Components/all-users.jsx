@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fetchUsers } from "@/lib/Apis";
+import { deleteUser, fetchUsers, updateUser } from "@/lib/Apis";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExclamationTriangleIcon, CubeIcon } from "@radix-ui/react-icons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -13,6 +13,8 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "./ui/alert";
+import { router } from "@inertiajs/react"; // Import Inertia's router
 
 export default function AllUsers({ setActiveSection, setUserData }) {
   const [users, setUsers] = useState([]);
@@ -20,7 +22,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [status, setStatus] = useState(null); 
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     const getUsers = async () => {
@@ -38,8 +40,8 @@ export default function AllUsers({ setActiveSection, setUserData }) {
 
   const handleAction = async (action, user) => {
     if (action === "edit") {
-      setActiveSection("add-user");
-      setUserData(user);
+      // Use Inertia's router to navigate to the edit route
+      router.visit(`/admin/user/${user.id}`);
     } else if (action === "delete") {
       setSelectedUser(user);
       setIsDialogOpen(true);
@@ -49,7 +51,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
   const confirmDelete = async () => {
     if (!selectedUser) return;
     try {
-      await axios.delete(`/delete-user/${selectedUser.id}`);
+      await deleteUser(selectedUser.id);
       setUsers(users.filter((u) => u.id !== selectedUser.id));
       toast.success("User deleted successfully!");
     } catch (error) {
@@ -62,28 +64,18 @@ export default function AllUsers({ setActiveSection, setUserData }) {
 
   const toggleUserActiveStatus = async (user) => {
     try {
-      // Toggle status between 0 and 1
       const updatedUser = { 
         ...user, 
-        status: user.status === '1' ? 0 : 1 // If status is 1, set it to 0 (deactivated), else set it to 1 (activated)
+        status: user.status === '1' ? 0 : 1
       };
-      
-      // Send the PUT request to update user
-      const response = await axios.put(`/update-user/${user.id}`, updatedUser);
-      
-      // Update the local state with the updated user data
+      await updateUser(user.id, updatedUser);
       setUsers(users.map(u => (u.id === user.id ? updatedUser : u)));
-      
-      // Show success toast
       toast.success(`User ${updatedUser.status === 1 ? "activated" : "deactivated"} successfully!`);
     } catch (error) {
-      // Show error toast if update fails
       toast.error("Failed to update user status. Try again!");
       console.error("Error updating user status:", error);
     }
-};
-
-
+  };
 
   return (
     <div className="p-6 min-h-screen">

@@ -8,25 +8,25 @@ import { addShop } from '@/lib/Apis'; // Import API utility
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-function AddShopForm({ setShops }) {
+function AddShopForm({  onSuccess}) {
   const methods = useForm();
   const { control, handleSubmit, formState: { errors }, reset } = methods;
 
-  const fetchAndSetShops = async () => {
-    try {
-      const shopsData = await fetchShops();
-      setShops(shopsData);
-    } catch (error) {
-      console.error('Error fetching shops:', error);
-    }
-  };
+  // const fetchAndSetShops = async () => {
+  //   try {
+  //     const shopsData = await fetchShops();
+  //     setShops(shopsData);
+  //   } catch (error) {
+  //     console.error('Error fetching shops:', error);
+  //   }
+  // };
 
   const onSubmit = async (data) => {
     try {
       // Add the shop
       await addShop(data);
       toast.success('Shop added successfully!');
-  
+      onSuccess()
       // Reset the form after adding the shop
       reset({
         name: '',

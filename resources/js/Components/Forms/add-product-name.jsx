@@ -9,7 +9,7 @@ import { fetchCategories, addProductName, fetchProductNames } from '@/lib/Apis';
 import { toast } from 'react-toastify'; // Import Toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
-function AddProductName({ categories, setProductsName }) {
+function AddProductName({ categories, onSuccess}) {
   const methods = useForm();
   const { control, handleSubmit, formState: { errors }, reset } = methods;
 
@@ -22,10 +22,7 @@ function AddProductName({ categories, setProductsName }) {
 
       await addProductName(payload); // Use addProductName from api.js
       toast.success('Product Name Added Successfully!');
-
-      // Fetch products again to update the list
-      fetchUpdatedProducts();
-
+      onSuccess()
       reset(); // Reset form
     } catch (error) {
       console.error('Error adding product:', error);
@@ -33,18 +30,18 @@ function AddProductName({ categories, setProductsName }) {
     }
   };
 
-  const fetchUpdatedProducts = async () => {
-    try {
-      const response = await fetchProductNames(); // Fetch updated products
-      setProductsName(response);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
+  // const fetchUpdatedProducts = async () => {
+  //   try {
+  //     const response = await fetchProductNames(); // Fetch updated products
+  //     setProductsName(response);
+  //   } catch (error) {
+  //     console.error('Error fetching products:', error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchUpdatedProducts();
-  }, []); // Runs once on component mount
+  // useEffect(() => {
+  //   fetchUpdatedProducts();
+  // }, []); // Runs once on component mount
 
   return (
     <div className="p-6 md:p-8 w-full mx-auto max-w-2xl">

@@ -8,25 +8,48 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { FaUser, FaEnvelope, FaLock, FaPlus, FaUserCog } from "react-icons/fa";
-import { getUserRoles, storeUserRole } from "@/lib/Apis";
+import { addUsers, getUserRoles, storeUserRole, updateUser } from "@/lib/Apis"; // Add getUserById
 import { toast } from "react-toastify";
 
-export default function AddUserForm({UserData}) {
+export default function AddUserForm({ id }) { // Only accept `id` as a prop
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [newRole, setNewRole] = useState("");
   const [roles, setRoles] = useState([]);
-//  console.log(UserData);
-  console.log(UserData);
-  
+  const [userData, setUserData] = useState(null); // State to store user data for update
+
   const form = useForm({
     defaultValues: {
-      name: UserData?.name || "",
-      email: UserData?.email ||  "",
+      name: "",
+      email: "",
       role: "",
       password: "",
     },
   });
+
+  // Fetch user data if `id` is provided
+  useEffect(() => {
+    if (id) {
+      const fetchUserData = async () => {
+        try {
+          const user = await updateUser(id); // Fetch user data by ID
+          console.log();
+          
+          setUserData(user);
+          form.reset({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            password: "", // Password is not needed for update
+          });
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          toast.error("Failed to fetch user data");
+        }
+      };
+      fetchUserData();
+    }
+  }, [id, form]);
 
   const generatePassword = (name) => {
     if (!name) return "";
@@ -43,7 +66,7 @@ export default function AddUserForm({UserData}) {
   const fetchRoles = async () => {
     try {
       const response = await getUserRoles();
-      setRoles(response.Roles || []);
+      setRoles(response || []);
     } catch (error) {
       console.error("Error fetching roles:", error);
     }
@@ -56,15 +79,15 @@ export default function AddUserForm({UserData}) {
   const onSubmit = async (values) => {
     setIsLoading(true);
     try {
-      if (UserData) {
+      if (id) {
         // Update existing user
-        const response = await axios.put(`/update-user/${UserData.id}`, values);
+        const response = await updateUser(id, values);
         console.log("Updated user data:", response.data);
         toast.success("User updated successfully");
         form.reset();
       } else {
         // Create a new user
-        const response = await axios.post("/store", values);
+        const response = await addUsers(values);
         console.log("Created new user:", response.data);
         toast.success("User added successfully");
       }
@@ -76,16 +99,6 @@ export default function AddUserForm({UserData}) {
       setIsLoading(false);
     }
   };
-  
-
-  // const updateUser = (data) => {
-  //   console.log('updated user');
-  //   console.log(data);
-    
-    
-  // }
-
-  
 
   const handleAddRole = async () => {
     if (newRole.trim()) {
@@ -104,7 +117,9 @@ export default function AddUserForm({UserData}) {
     <div className="h-[90vh] flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-2xl mx-auto shadow-lg rounded-lg bg-white">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-gray-800">Add New User</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">
+            {id ? "Update User" : "Add New User"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -144,14 +159,13 @@ export default function AddUserForm({UserData}) {
               />
 
               {/* Role Field */}
-              {/* Role Field */}
-              {UserData && (
+              {userData && (
                 <FormItem className="flex items-center space-x-3">
                   <FormLabel className="flex items-center text-gray-600">
-                    <FaUserCog className="mr-2 text-blue-500" /> Role
+                    <FaUserCog className="mr-2 text-blue-500" /> Current Role
                   </FormLabel>
                   <FormControl>
-                    <Input  readOnly value={`Current Role - ${UserData.role}`} />
+                    <Input readOnly value={userData.role} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,10 +178,7 @@ export default function AddUserForm({UserData}) {
                     <FormLabel className="flex items-center text-gray-600">
                       <FaUserCog className="mr-2 text-blue-500" /> Role
                     </FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(value)} // Update selected role correctly
-                      value={field.value} // Ensure selected role is shown
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a role" />
@@ -175,7 +186,7 @@ export default function AddUserForm({UserData}) {
                       </FormControl>
                       <SelectContent>
                         {roles.map((role) => (
-                          <SelectItem key={role.id} value={role.name}>  {/* Convert ID to string */}
+                          <SelectItem key={role.id} value={role.name}>
                             {role.name}
                           </SelectItem>
                         ))}
@@ -186,26 +197,23 @@ export default function AddUserForm({UserData}) {
                 )}
               />
 
-
-              {!UserData && (
-                <>
-                  {/* Password Field */}
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem className="flex items-center space-x-3">
-                    <FormLabel className="flex items-center text-gray-600">
-                      <FaLock className="mr-2 text-blue-500" /> Password (Auto-generated)
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} readOnly placeholder="Generated password" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-                </>
+              {/* Password Field (only for new users) */}
+              {!id && (
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-3">
+                      <FormLabel className="flex items-center text-gray-600">
+                        <FaLock className="mr-2 text-blue-500" /> Password (Auto-generated)
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} readOnly placeholder="Generated password" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
 
               {/* Buttons Section */}
@@ -240,44 +248,17 @@ export default function AddUserForm({UserData}) {
                 </Dialog>
 
                 {/* Submit Button */}
-                {UserData ? (
-                  <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
-                    {isLoading? (
-                      <>
-                        <FaUser className="animate-spin mr-2" /> Updating...
-                      </>
-                    ) : (
-                      <>
-                        <FaUser className="mr-2" /> Update User
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
-                    {isLoading? (
-                      <>
-                        <FaUser className="animate-spin mr-2" /> Adding...
-                      </>
-                    ) : (
-                      <>
-                        <FaUser className="mr-2" /> Add User
-                      </>
-                    )}
-                  </Button>
-                )
-              
-              }
-                {/* <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
+                <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] flex items-center" disabled={isLoading}>
                   {isLoading ? (
                     <>
-                      <FaUser className="animate-spin mr-2" /> Adding...
+                      <FaUser className="animate-spin mr-2" /> {id ? "Updating..." : "Adding..."}
                     </>
                   ) : (
                     <>
-                      <FaUser className="mr-2" /> Add User
+                      <FaUser className="mr-2" /> {id ? "Update User" : "Add User"}
                     </>
                   )}
-                </Button> */}
+                </Button>
               </div>
             </form>
           </Form>

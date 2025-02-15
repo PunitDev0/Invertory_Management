@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Button } from '../ui/button'; // Adjust the path
 import { Input } from '../ui/input'; // Adjust the path
 import { Card } from '../ui/card'; // Adjust the path
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form';
-import { addCategory, fetchCategories } from '@/lib/Apis'; // Import API utility
+import { addCategory } from '@/lib/Apis'; // Import API utility
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-function AddCategoryForm({ setCategories }) {
+function AddCategoryForm({ onSuccess }) {
   const methods = useForm();
   const { control, handleSubmit, formState: { errors }, reset } = methods;
   const [image, setImage] = useState(null);
@@ -26,15 +26,6 @@ function AddCategoryForm({ setCategories }) {
     }
   };
 
-  const fetchAndSetCategories = async () => {
-    try {
-      const categoriesData = await fetchCategories();
-      setCategories(categoriesData);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -42,22 +33,20 @@ function AddCategoryForm({ setCategories }) {
       if (image) {
         formData.append('image', image);
       }
-      
+
       await addCategory(formData);
       toast.success('Category added successfully!');
-      reset();
+      reset({
+        name: '',
+      })
       setImage(null);
       setImagePreview(null);
-      fetchAndSetCategories(); // Fetch categories after adding
+      onSuccess(); // Trigger refetch of categories
     } catch (error) {
       console.error('Error adding category:', error.response?.data || error.message);
-      toast.error('Failed to add category');
+      toast.error(`${error.response?.data.errors.name}`);
     }
   };
-
-  useEffect(() => {
-    fetchAndSetCategories();
-  }, []);
 
   return (
     <div className="max-w-2xl p-6 md:p-8 w-full mx-auto">
