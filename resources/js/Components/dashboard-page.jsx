@@ -4,21 +4,13 @@ import { useEffect, useState } from "react";
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
 import { DashboardContent } from "./dashboard-content";
-import MainFrom from "./main-form";
-import AddUserForm from "./add-user-form";
-import OrdersTracking from "./order-tracking";
-import AllProducts from "./all-products";
-import AllUsers from "./all-users";
 import { fetchOrders, fetchProducts, fetchUsers } from "@/lib/Apis";
 import axios from "axios";
 
 export function DashboardPage({userorders}) {
   const [activeSection, setActiveSection] = useState("dashboard");
   // console.log(userorders);
-  
-  const [Id, setId] = useState();
-  const [productData, setproductData] = useState();
-  const [userData, setUserData] = useState();
+
 
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
