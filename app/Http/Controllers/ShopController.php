@@ -20,7 +20,6 @@ class ShopController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
-            'owner_name' => 'required|string|max:255',
             'contact_number' => 'required|digits:10',
         ]);
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import Layout from './Layout/Layout';
-import AddShopForm from './Forms/add-shops-form';
-import { deleteShops, fetchShops } from '@/lib/Apis';
+import { deleteShops, fetchShops, addShop, editShops } from '@/lib/Apis';
 import {
   Table,
   TableBody,
@@ -9,20 +9,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'; // Import shadcn table components
-import { Button } from '@/components/ui/button'; // Import shadcn button component
-import { Pencil, Trash } from 'lucide-react'; // Icons for edit and delete actions
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash } from 'lucide-react';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Input } from './ui/input';
+import { Card } from './ui/card';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/Components/ui/form';
 
 function ShopPage() {
   const [shops, setShops] = useState([]);
+  const [editingShop, setEditingShop] = useState(null);
+  const methods = useForm();
+  const { control, handleSubmit, formState: { errors }, reset, setValue } = methods;
 
-  // Fetch shops
   const fetchAndSetShops = async () => {
     try {
       const shopsData = await fetchShops();
-      console.log(shopsData);
-      
       setShops(shopsData);
     } catch (error) {
       console.error('Error fetching shops:', error);
@@ -34,22 +38,19 @@ function ShopPage() {
     fetchAndSetShops();
   }, []);
 
-  // Handle edit action
-  const handleEdit = (shopId) => {
-    console.log('Edit shop:', shopId);
-    // Add your edit logic here
+  const handleEdit = (shop) => {
+    setEditingShop(shop);
+    setValue('name', shop.name);
+    setValue('location', shop.address);
+    setValue('contact_number', shop.contact_number);
   };
 
-  // Handle delete action
   const handleDelete = async (shopId) => {
-    console.log('Delete shop:', shopId);
     try {
       const response = await deleteShops(shopId);
-      console.log(response);
-      
       if (response.message) {
         toast.success(`${response.message}`);
-        fetchAndSetShops(); // Refetch shops after deletion
+        fetchAndSetShops();
       } else {
         toast.error('Failed to delete shop');
       }
@@ -59,13 +60,87 @@ function ShopPage() {
     }
   };
 
+  const onSubmit = async (data) => {
+    try {
+      if (editingShop) {
+        await editShops(editingShop.id, data);
+        toast.success('Shop updated successfully!');
+      } else {
+        await addShop(data);
+        toast.success('Shop added successfully!');
+      }
+      setEditingShop(null);
+      fetchAndSetShops();
+      reset({
+        name: '',
+        location: '',
+        contact_number: ''
+      });
+    } catch (error) {
+      console.error('Error adding/editing shop:', error.response?.data || error.message);
+      toast.error('Failed to add/edit shop');
+    }
+  };
+
   return (
     <Layout>
       <div className="p-6 flex flex-col items-center w-full">
         <h1 className="text-2xl font-bold mb-6">Shops</h1>
-        <AddShopForm onSuccess={fetchAndSetShops} />
+        <div className="max-w-2xl p-6 md:p-8 w-full mx-auto">
+          <Card className="p-8 shadow-lg rounded-lg bg-white">
+            <h3 className="text-2xl font-semibold mb-4 text-gray-800">{editingShop ? 'Edit Shop' : 'Add New Shop'}</h3>
+            <FormProvider {...methods}>
+              <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                <FormField
+                  control={control}
+                  name="name"
+                  rules={{ required: 'Shop Name is required' }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Shop Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter shop name" />
+                      </FormControl>
+                      <FormMessage>{errors.name?.message}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="location"
+                  rules={{ required: 'Location is required' }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter location" />
+                      </FormControl>
+                      <FormMessage>{errors.location?.message}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="contact_number"
+                  rules={{ required: 'Contact Number is required', pattern: { value: /^[0-9]{10}$/, message: 'Enter a valid 10-digit number' } }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter contact number" />
+                      </FormControl>
+                      <FormMessage>{errors.contact_number?.message}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition">
+                  {editingShop ? 'Update Shop' : 'Add Shop'}
+                </Button>
+              </form>
+            </FormProvider>
+          </Card>
+        </div>
 
-        {/* Centered Table */}
         <div className="mt-6 w-full flex justify-center">
           <div className="w-full max-w-4xl">
             <Table className="w-full">
@@ -82,21 +157,13 @@ function ShopPage() {
                   <TableRow key={shop.id}>
                     <TableCell className="text-center">{shop.id}</TableCell>
                     <TableCell className="text-center">{shop.name}</TableCell>
-                    <TableCell className="text-center">{shop.address}</TableCell>
+                    <TableCell className="text-center">{shop.location}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex space-x-2 justify-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(shop.id)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(shop)}>
                           <Pencil className="h-4 w-4 mr-2" /> Edit
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(shop.id)}
-                        >
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(shop.id)}>
                           <Trash className="h-4 w-4 mr-2" /> Delete
                         </Button>
                       </div>

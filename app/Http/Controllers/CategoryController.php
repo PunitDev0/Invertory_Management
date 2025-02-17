@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -68,7 +69,7 @@ class CategoryController extends Controller
 
         // Validate input
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:categories,name,' . $id,
+            'name' => 'sometimes|string|max:255|unique:categories,name,' . $id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -77,17 +78,22 @@ class CategoryController extends Controller
         }
 
         // Handle image upload
-        $imagePath = $category->image;
+        $imagePath = $category->image; // Keep the existing image path by default
         if ($request->hasFile('image')) {
+            // Delete the old image if it exists
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+
+            // Store the new image and get the path
             $image = $request->file('image');
-            // Store new image and get the path
             $imagePath = $image->store('categories', 'public');
         }
 
         // Update the category
         $category->update([
-            'name' => $request->name,
-            'image' => $imagePath, // Update the image path if new image uploaded
+            'name' => $request->name ?? $category->name, // Use existing name if not provided
+            'image' => $imagePath, // Update the image path if a new image was uploaded
         ]);
 
         return response()->json(['message' => 'Category updated successfully!', 'category' => $category], 200);
