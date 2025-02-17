@@ -26,7 +26,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
   const [recentOrders, setRecentOrders] = useState([]);
 
   // Calculate total revenue from orders
-  const totalRevenue = orders.reduce((acc, order) => acc + parseFloat(order.price || 0), 0);
+  const totalRevenue = orders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
 
   // Get date ranges based on selected timeRange
   const getDateRange = () => {
@@ -118,7 +118,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
       if (dataByDate.has(timeUnit)) {
         const data = dataByDate.get(timeUnit);
         data.orders += 1;
-        data.revenue += parseFloat(order.price || 0);
+        data.revenue += parseFloat(order.paid_payment || 0);
       }
     });
     
@@ -204,6 +204,8 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
       maximumFractionDigits: 0
     }).format(amount);
   };
+  // console.log(orders);
+  
 
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 relative">
@@ -495,7 +497,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <h3 className="text-xl font-semibold">Top Selling Products</h3>
                 <p className="text-sm text-gray-500">Products with highest order count</p>
               </div>
-              <Button variant="outline" size="sm">View All</Button>
+              {/* <Button variant="outline" size="sm">View All</Button> */}
             </div>
             <div className="overflow-x-auto">
               <Table>
@@ -503,17 +505,17 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="text-right">Orders</TableHead>
-                    <TableHead className="text-right">Revenue</TableHead>
+                    {/* <TableHead className="text-right">Orders</TableHead>
+                    <TableHead className="text-right">Revenue</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {topProducts.map((product) => (
                     <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name || product.title || 'Unknown'}</TableCell>
+                      <TableCell className="font-medium">{product.productName || product.title || 'Unknown'}</TableCell>
                       <TableCell className="text-right">{formatCurrency(product.price || 0)}</TableCell>
-                      <TableCell className="text-right">{product.orderCount}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(product.revenue)}</TableCell>
+                      {/* <TableCell className="text-right">{product.orderCount}</TableCell> */}
+                      {/* <TableCell className="text-right">{formatCurrency(product.revenue)}</TableCell> */}
                     </TableRow>
                   ))}
                   {topProducts.length === 0 && (
@@ -535,7 +537,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <h3 className="text-xl font-semibold">Recent Orders</h3>
                 <p className="text-sm text-gray-500">Latest customer purchases</p>
               </div>
-              <Button variant="outline" size="sm">View All</Button>
+              {/* <Button variant="outline" size="sm">View All</Button> */}
             </div>
             <div className="overflow-x-auto">
               <Table>
@@ -543,7 +545,8 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <TableRow>
                     <TableHead>Order ID</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Pending_Amount</TableHead>
+                    <TableHead className="text-right">Total_Amount</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -552,13 +555,15 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id || 'N/A'}</TableCell>
                       <TableCell>{order.customer_name || order.user_name || 'Unknown'}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(order.price || 0)}</TableCell>
+                      {/* <TableCell>{order.customer_name || order.user_name || 'Unknown'}</TableCell> */}
+                      <TableCell className="text-right">{formatCurrency(order.pending_payment || 0)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(order.total_amount || 0)}</TableCell>
                       <TableCell className="text-right">
                         <Badge 
                           className={
-                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            order.pending_payment === "0.00" ? 'bg-green-100 text-green-800' :
+                            // order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            order.pending_payment !== '0.00' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-gray-100 text-gray-800'
                           }
                         >
