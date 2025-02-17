@@ -107,9 +107,9 @@ export const deleteProductName = async (id) => {
     throw error;
   }
 };
-export const editProductName = async (id) => {
+export const editProductName = async (id, data) => {
   try {
-    const response = await axios.put(`/product-names/${id}`);
+    const response = await axios.put(`/product-names/${id}`, data);
     return response.data;
   } catch (error) {
     console.error('Error adding product:', error);
@@ -188,9 +188,13 @@ export const deleteCategory = async (id) => {
 };  
 
 
-export const editCategory = async (id) => {
+export const updateCategory = async (id, data) => {
   try {
-    const response = await axios.put(`/categories/${id}`);
+    console.log(data);
+    
+    const response = await axios.put(`/categories/${id}`, data);
+    // console.log(response);
+    
     return response.data;
   } catch (error) {
     throw error;
@@ -240,6 +244,15 @@ export const fetchShops = async () => {
 export const deleteShops = async (id) => {
   try {
     const response = await axios.delete(`/shops/${id}`);
+    return response.data
+  } catch (error) {
+    console.error('Not Store Shops Data', error);
+    throw error;
+  }
+};
+export const editShops = async (id, data) => {
+  try {
+    const response = await axios.put(`/shops/${id}`, data);
     return response.data
   } catch (error) {
     console.error('Not Store Shops Data', error);

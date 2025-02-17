@@ -30,18 +30,6 @@ function AddProductName({ categories, onSuccess}) {
     }
   };
 
-  // const fetchUpdatedProducts = async () => {
-  //   try {
-  //     const response = await fetchProductNames(); // Fetch updated products
-  //     setProductsName(response);
-  //   } catch (error) {
-  //     console.error('Error fetching products:', error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchUpdatedProducts();
-  // }, []); // Runs once on component mount
 
   return (
     <div className="p-6 md:p-8 w-full mx-auto max-w-2xl">
