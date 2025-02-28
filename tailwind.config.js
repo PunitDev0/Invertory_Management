@@ -10,7 +10,14 @@ export default withTV({
     './resources/js/**/*.jsx',
 ],
   theme: {
+    
     extend: {
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -45,7 +52,11 @@ export default withTV({
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        animation: {
+          "fade-in": "fadeIn 0.3s ease-out",
+        },
       },
+      
       screens: {
         "2xl": "1536px",
         "3xl": "1920px",

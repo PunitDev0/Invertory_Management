@@ -7,16 +7,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { FaUser, FaEnvelope, FaLock, FaPlus, FaUserCog } from "react-icons/fa";
-import { addUsers, getUserRoles, storeUserRole, updateUser } from "@/lib/Apis"; // Add getUserById
+import { FaUser, FaEnvelope, FaLock, FaPlus, FaUserCog, FaSync } from "react-icons/fa";
+import { addUsers, getUserRoles, storeUserRole, updateUser } from "@/lib/Apis";
 import { toast } from "react-toastify";
 
-export default function AddUserForm({ id }) { // Only accept `id` as a prop
+export default function AddUserForm({ id }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [newRole, setNewRole] = useState("");
   const [roles, setRoles] = useState([]);
-  const [userData, setUserData] = useState(null); // State to store user data for update
+  const [userData, setUserData] = useState(null);
 
   const form = useForm({
     defaultValues: {
@@ -27,20 +26,18 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
     },
   });
 
-  // Fetch user data if `id` is provided
+  // Fetch user data if `id` is provided (for updating)
   useEffect(() => {
     if (id) {
       const fetchUserData = async () => {
         try {
-          const user = await updateUser(id); // Fetch user data by ID
-          console.log();
-          
+          const user = await updateUser(id); // Assuming this fetches user data
           setUserData(user);
           form.reset({
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            password: "", // Password is not needed for update
+            name: user.name || "",
+            email: user.email || "",
+            role: user.role || "",
+            password: "", // Password is initially empty for updates
           });
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -51,15 +48,24 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
     }
   }, [id, form]);
 
+  // Improved password generation function
   const generatePassword = (name) => {
     if (!name) return "";
-    const randomNumbers = Math.floor(1000 + Math.random() * 9000);
-    return `${name.replace(/\s+/g, "")}@${randomNumbers}`;
+    const randomString = Math.random().toString(36).slice(-4); // 4 random alphanumeric chars
+    const randomNumbers = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    return `${name.replace(/\s+/g, "").toLowerCase()}@${randomString}${randomNumbers}`;
   };
 
   const handleNameChange = (event) => {
     const name = event.target.value;
     form.setValue("name", name);
+    if (!id) { // Only auto-generate password for new users
+      form.setValue("password", generatePassword(name));
+    }
+  };
+
+  const regeneratePassword = () => {
+    const name = form.getValues("name");
     form.setValue("password", generatePassword(name));
   };
 
@@ -81,20 +87,23 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
     try {
       if (id) {
         // Update existing user
-        const response = await updateUser(id, values);
-        console.log("Updated user data:", response.data);
+        const updateData = { ...values };
+        if (!updateData.password) {
+          delete updateData.password; // Exclude password if not provided
+        }
+        const response = await updateUser(id, updateData);
+        console.log("Updated user data:", response);
         toast.success("User updated successfully");
-        form.reset();
       } else {
         // Create a new user
         const response = await addUsers(values);
-        console.log("Created new user:", response.data);
+        console.log("Created new user:", response);
         toast.success("User added successfully");
       }
       form.reset();
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error(`Error: ${"Failed to process request"}`);
+      toast.error(`Error: ${error.response?.data?.message || "Failed to process request"}`);
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +115,10 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
         await storeUserRole(newRole);
         toast.success("Role added successfully");
         setNewRole("");
-        fetchRoles(); // Refresh roles after adding a new one
+        fetchRoles(); // Refresh roles
       } catch (error) {
         console.error("Error adding role:", error);
+        toast.error("Failed to add role");
       }
     }
   };
@@ -197,24 +207,30 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
                 )}
               />
 
-              {/* Password Field (only for new users) */}
-              {!id && (
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-3">
-                      <FormLabel className="flex items-center text-gray-600">
-                        <FaLock className="mr-2 text-blue-500" /> Password (Auto-generated)
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} readOnly placeholder="Generated password" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              {/* Password Field */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-3">
+                    <FormLabel className="flex items-center text-gray-600">
+                      <FaLock className="mr-2 text-blue-500" /> Password
+                    </FormLabel>
+                    <FormControl>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          {...field}
+                          placeholder={id ? "Enter new password (optional)" : "Generated password"}
+                        />
+                        <Button type="button" onClick={regeneratePassword} className="bg-gray-500 hover:bg-gray-600">
+                          <FaSync className="mr-2" /> Regenerate
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Buttons Section */}
               <div className="flex justify-end space-x-4">
@@ -235,7 +251,7 @@ export default function AddUserForm({ id }) { // Only accept `id` as a prop
                         onChange={(e) => setNewRole(e.target.value)}
                         placeholder="Enter new role"
                       />
-                      <DialogFooter className={`mt-4`}>
+                      <DialogFooter className="mt-4">
                         <Button onClick={handleAddRole} className="bg-green-500 hover:bg-green-600">
                           <FaPlus className="mr-2" /> Add Role
                         </Button>

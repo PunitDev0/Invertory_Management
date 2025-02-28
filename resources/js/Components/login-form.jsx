@@ -15,21 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 
-export function LoginForm({
-  className,
-  ...props
-}) {
+export function LoginForm({ className, ...props }) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm(); // React Hook Form setup
+  } = useForm();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const onSubmit = async (data) => {
-    // Clear any previous error
     setError(null);
     setLoading(true);
 
@@ -39,91 +35,97 @@ export function LoginForm({
         password: data.password,
       });
 
-      // Handle successful login (e.g., redirect, set user state, etc.)
       console.log("Login successful:", response);
       if (response.data.redirect) {
-        // Redirect using Inertia's client-side navigation
         Inertia.visit(response.data.redirect);
-        // window.location.href ='/admin/dashboard'
       }
     } catch (err) {
-      // Handle error (e.g., display error message)
       setError("Invalid email or password.");
       console.error("Login error:", err);
-      toast.error(err.response.data.message);
+      toast.error(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
+    <div
+      className={cn(
+        "flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-50 to-purple-50",
+        className
+      )}
+      {...props}
+    >
+      <Card className="w-full max-w-md shadow-2xl rounded-xl border border-gray-200 bg-white">
+        <CardHeader className="text-center p-8 border-b border-gray-200">
+          <CardTitle className="text-3xl font-bold text-gray-800">
+            Login to Aryan Event Admin
+          </CardTitle>
+          <CardDescription className="text-gray-600 mt-2">
+            Enter your credentials to access the admin panel
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-6">
-              {/* Email Input */}
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  {...register("email", { required: "Email is required" })}
-                />
-                {errors.email && (
-                  <span className="text-sm text-red-500">{errors.email.message}</span>
-                )}
-              </div>
-
-              {/* Password Input */}
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register("password", { required: "Password is required" })}
-                />
-                {errors.password && (
-                  <span className="text-sm text-red-500">{errors.password.message}</span>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </Button>
-
-              {/* Login with Google */}
-              <Button variant="outline" className="w-full">
-                Login with Google
-              </Button>
+        <CardContent className="p-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Email Input */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
+              >
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                {...register("email", { required: "Email is required" })}
+              />
+              {errors.email && (
+                <span className="text-sm text-red-500">
+                  {errors.email.message}
+                </span>
+              )}
             </div>
 
-            {/* Display any form submission errors */}
-            {error && <div className="mt-4 text-red-500 text-center">{error}</div>}
-
-            {/* Signup Link */}
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
+            {/* Password Input */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700"
+              >
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                {...register("password", { required: "Password is required" })}
+              />
+              {errors.password && (
+                <span className="text-sm text-red-500">
+                  {errors.password.message}
+                </span>
+              )}
             </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Log In"}
+            </Button>
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-center text-red-500 text-sm bg-red-50 p-2 rounded-lg">
+                {error}
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>

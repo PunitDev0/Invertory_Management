@@ -47,44 +47,50 @@ class UserController extends Controller
     {
         // Find the user by ID
         $user = User::find($id);
-
+    
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
-
+    
         // Validate the update request
         $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'email'    => 'sometimes|email|unique:users,email,' . $user->id,
             'role'     => 'sometimes|string|max:255',
             'status'   => 'sometimes|in:0,1', // Validate that the status is either 0 or 1
-          
+            'password' => 'sometimes|min:8', // Ensure password confirmation is provided
         ]);
-
+    
         // Update user fields if they are provided in the request
         if ($request->has('name')) {
-
             $user->name = $request->name;
         }
-
+    
         if ($request->has('email')) {
             $user->email = $request->email;
         }
-
+    
         if ($request->has('role')) {
             $user->role = $request->role;
         }
+    
         if ($request->has('status')) {
             $user->status = $request->status;
         }
+    
+        if ($request->has('password')) {
+            $user->password = Hash::make($request->password);
+        }
+    
         // Save updated user details
         $user->save();
-
+    
         return response()->json([
             'message' => 'User updated successfully',
             'user'    => $user,
         ], 200);
     }
+    
 
 
     // Delete a user

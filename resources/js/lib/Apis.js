@@ -212,7 +212,8 @@ export const updateCategory = async (id, data) => {
 export const fetchOrders = async () => {
   try {
     const response = await axios.get(`/orders/list`);
-    
+     console.log(response.data.userorders );
+     
     return response.data.userorders    ; // Ensure this matches the Laravel API response
   } catch (error) {
     console.error('Error fetching orders:', error);

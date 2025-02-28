@@ -2,10 +2,11 @@ import { Card } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { FaShoppingCart, FaBox, FaUsers, FaRupeeSign, FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { Button } from "./ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Custom table components
 import {
@@ -21,126 +22,142 @@ import {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = [], activities = [] }) {
-  const [timeRange, setTimeRange] = useState("week");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [topProducts, setTopProducts] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
 
-  // Calculate total revenue from orders
-  const totalRevenue = orders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
+  // Convert date strings to Date objects, null means no filter
+  const startDateObj = startDate ? new Date(startDate) : null;
+  const endDateObj = endDate ? new Date(endDate) : null;
 
-  // Get date ranges based on selected timeRange
-  const getDateRange = () => {
-    const now = new Date();
-    const ranges = {
-      week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-      month: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-      quarter: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
-      year: new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000),
-    };
-    return ranges[timeRange] || ranges.week;
+  // Filter data: show all if no date range is set
+  const filteredOrders = startDate || endDate
+    ? orders.filter(order => {
+        const orderDate = new Date(order.updated_at);
+        return (!startDateObj || orderDate >= startDateObj) && (!endDateObj || orderDate <= endDateObj);
+      })
+    : orders;
+
+  const filteredProducts = startDate || endDate
+    ? GetAllProducts.filter(product => {
+        const productDate = new Date(product.updated_at);
+        return (!startDateObj || productDate >= startDateObj) && (!endDateObj || productDate <= endDateObj);
+      })
+    : GetAllProducts;
+
+  const filteredUsers = startDate || endDate
+    ? AllUsers.filter(user => {
+        const userDate = new Date(user.created_at);
+        return (!startDateObj || userDate >= startDateObj) && (!endDateObj || userDate <= endDateObj);
+      })
+    : AllUsers;
+
+  // Calculate total revenue from filtered orders
+  const totalRevenue = filteredOrders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
+
+  // Previous period for comparison (only when date range is set)
+  const getPreviousRange = () => {
+    if (!startDateObj || !endDateObj) return { prevStart: null, prevEnd: null };
+    const duration = endDateObj - startDateObj;
+    const prevEnd = new Date(startDateObj.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - duration);
+    return { prevStart, prevEnd };
   };
 
-  const startDate = getDateRange();
+  const { prevStart, prevEnd } = getPreviousRange();
 
-  // Filter data based on selected time range
-  const filteredOrders = orders.filter(order => new Date(order.updated_at) >= startDate);
-  const filteredProducts = GetAllProducts.filter(product => new Date(product.updated_at) >= startDate);
-  const filteredUsers = AllUsers.filter(user => new Date(user.created_at) >= startDate);
+  const previousOrders = prevStart && prevEnd
+    ? orders.filter(order => {
+        const orderDate = new Date(order.updated_at);
+        return orderDate >= prevStart && orderDate <= prevEnd;
+      })
+    : [];
 
-  // Get previous period data for comparison
-  const previousStartDate = new Date(startDate.getTime() - (startDate - new Date().getTime()));
-  const previousOrders = orders.filter(order => 
-    new Date(order.updated_at) >= previousStartDate && new Date(order.updated_at) < startDate
-  );
-  const previousProducts = GetAllProducts.filter(product => 
-    new Date(product.updated_at) >= previousStartDate && new Date(product.updated_at) < startDate
-  );
-  const previousUsers = AllUsers.filter(user => 
-    new Date(user.created_at) >= previousStartDate && new Date(user.created_at) < startDate
-  );
-  const previousRevenue = previousOrders.reduce((acc, order) => acc + parseFloat(order.price || 0), 0);
+  const previousProducts = prevStart && prevEnd
+    ? GetAllProducts.filter(product => {
+        const productDate = new Date(product.updated_at);
+        return productDate >= prevStart && productDate <= prevEnd;
+      })
+    : [];
 
-  // Calculate percentage changes
+  const previousUsers = prevStart && prevEnd
+    ? AllUsers.filter(user => {
+        const userDate = new Date(user.created_at);
+        return userDate >= prevStart && userDate <= prevEnd;
+      })
+    : [];
+
+  const previousRevenue = previousOrders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
+
+  // Calculate percentage changes (0 if no range is set)
   const calculateChange = (current, previous) => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   };
 
-  const orderChange = calculateChange(filteredOrders.length, previousOrders.length);
-  const productChange = calculateChange(filteredProducts.length, previousProducts.length);
-  const userChange = calculateChange(filteredUsers.length, previousUsers.length);
-  const revenueChange = calculateChange(totalRevenue, previousRevenue);
+  const orderChange = startDate && endDate ? calculateChange(filteredOrders.length, previousOrders.length) : 0;
+  const productChange = startDate && endDate ? calculateChange(filteredProducts.length, previousProducts.length) : 0;
+  const userChange = startDate && endDate ? calculateChange(filteredUsers.length, previousUsers.length) : 0;
+  const revenueChange = startDate && endDate ? calculateChange(totalRevenue, previousRevenue) : 0;
 
-  // Prepare data for charts
+  // Prepare time series data (full range initially)
   const prepareTimeSeriesData = () => {
-    // Create a map to store data by date
     const dataByDate = new Map();
-    
-    // Get the appropriate time unit based on selected range
-    const getTimeUnit = (date) => {
-      switch(timeRange) {
-        case 'week': return date.toISOString().split('T')[0]; // Daily for week
-        case 'month': return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${Math.ceil(date.getDate() / 7)}`; // Weekly for month
-        case 'quarter': return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // Monthly for quarter
-        case 'year': return `${date.getFullYear()}-Q${Math.floor(date.getMonth() / 3) + 1}`; // Quarterly for year
-        default: return date.toISOString().split('T')[0];
-      }
-    };
-    
-    // Initialize the map with all dates in the range
-    let currentDate = new Date(startDate);
-    while (currentDate <= new Date()) {
-      const timeUnit = getTimeUnit(currentDate);
-      if (!dataByDate.has(timeUnit)) {
-        dataByDate.set(timeUnit, { 
-          name: timeUnit,
-          orders: 0,
-          revenue: 0,
-          users: 0,
-          products: 0
-        });
-      }
-      
-      // Increment by appropriate amount based on time range
-      switch(timeRange) {
-        case 'week': currentDate.setDate(currentDate.getDate() + 1); break;
-        case 'month': currentDate.setDate(currentDate.getDate() + 7); break;
-        case 'quarter': currentDate.setMonth(currentDate.getMonth() + 1); break;
-        case 'year': currentDate.setMonth(currentDate.getMonth() + 3); break;
-        default: currentDate.setDate(currentDate.getDate() + 1);
-      }
+
+    // Determine full range or custom range
+    const earliestDate = new Date(Math.min(
+      ...orders.map(o => new Date(o.updated_at).getTime()),
+      ...GetAllProducts.map(p => new Date(p.updated_at).getTime()),
+      ...AllUsers.map(u => new Date(u.created_at).getTime()),
+      Date.now() // Ensure we have a valid minimum
+    ));
+    const latestDate = new Date(Math.max(
+      ...orders.map(o => new Date(o.updated_at).getTime()),
+      ...GetAllProducts.map(p => new Date(p.updated_at).getTime()),
+      ...AllUsers.map(u => new Date(u.created_at).getTime()),
+      Date.now() // Ensure we have a valid maximum
+    ));
+
+    let currentDate = startDateObj || earliestDate;
+    const end = endDateObj || latestDate;
+
+    while (currentDate <= end) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      dataByDate.set(dateKey, {
+        name: dateKey,
+        orders: 0,
+        revenue: 0,
+        users: 0,
+        products: 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    
-    // Populate with actual data
+
+    // Populate with all data initially, filtered data when range is set
     filteredOrders.forEach(order => {
-      const date = new Date(order.updated_at);
-      const timeUnit = getTimeUnit(date);
-      if (dataByDate.has(timeUnit)) {
-        const data = dataByDate.get(timeUnit);
+      const date = new Date(order.updated_at).toISOString().split('T')[0];
+      if (dataByDate.has(date)) {
+        const data = dataByDate.get(date);
         data.orders += 1;
         data.revenue += parseFloat(order.paid_payment || 0);
       }
     });
-    
+
     filteredUsers.forEach(user => {
-      const date = new Date(user.created_at);
-      const timeUnit = getTimeUnit(date);
-      if (dataByDate.has(timeUnit)) {
-        const data = dataByDate.get(timeUnit);
-        data.users += 1;
+      const date = new Date(user.created_at).toISOString().split('T')[0];
+      if (dataByDate.has(date)) {
+        dataByDate.get(date).users += 1;
       }
     });
-    
+
     filteredProducts.forEach(product => {
-      const date = new Date(product.updated_at);
-      const timeUnit = getTimeUnit(date);
-      if (dataByDate.has(timeUnit)) {
-        const data = dataByDate.get(timeUnit);
-        data.products += 1;
+      const date = new Date(product.updated_at).toISOString().split('T')[0];
+      if (dataByDate.has(date)) {
+        dataByDate.get(date).products += 1;
       }
     });
-    
-    // Convert map to array and sort by date
+
     return Array.from(dataByDate.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
@@ -149,51 +166,41 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
   // Group users by role
   const usersByRole = filteredUsers.reduce((acc, user) => {
     const role = user.role || 'unknown';
-    if (!acc[role]) {
-      acc[role] = 0;
-    }
-    acc[role] += 1;
+    acc[role] = (acc[role] || 0) + 1;
     return acc;
   }, {});
 
-  // Transform role data for charts
   const roleData = Object.keys(usersByRole).map(role => ({
     name: role,
     value: usersByRole[role],
   }));
 
-  // Find top products by order frequency
+  // Find top products and recent orders
   useEffect(() => {
-    // Count orders per product
     const productOrderCount = {};
     filteredOrders.forEach(order => {
       const productId = order.product_id;
       if (productId) {
-        if (!productOrderCount[productId]) {
-          productOrderCount[productId] = 0;
-        }
-        productOrderCount[productId] += 1;
+        productOrderCount[productId] = (productOrderCount[productId] || 0) + 1;
       }
     });
 
-    // Match with product data and sort
     const productsWithCount = GetAllProducts
       .map(product => ({
         ...product,
         orderCount: productOrderCount[product.id] || 0,
-        revenue: (productOrderCount[product.id] || 0) * parseFloat(product.price || 0)
+        revenue: (productOrderCount[product.id] || 0) * parseFloat(product.price || 0),
       }))
       .sort((a, b) => b.orderCount - a.orderCount)
-      .slice(0, 5); // Get top 5
+      .slice(0, 5);
 
     setTopProducts(productsWithCount);
 
-    // Get recent orders
-    const recent = [...orders]
+    const recent = [...filteredOrders] // Always show latest from filtered orders
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       .slice(0, 5);
     setRecentOrders(recent);
-  }, [filteredOrders, GetAllProducts, orders, timeRange]);
+  }, [filteredOrders, GetAllProducts]);
 
   // Format currency
   const formatCurrency = (amount) => {
@@ -201,11 +208,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
-  // console.log(orders);
-  
 
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-10 relative">
@@ -215,26 +220,44 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
             <h2 className="text-3xl font-bold">Dashboard</h2>
             <p className="text-gray-500 mt-1">Welcome back! Here's what's happening with your store.</p>
           </div>
-          
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <FaCalendarAlt />
               <span>View data for:</span>
             </div>
-            <Tabs value={timeRange} onValueChange={setTimeRange} className="w-[300px]">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="week">Week</TabsTrigger>
-                <TabsTrigger value="month">Month</TabsTrigger>
-                <TabsTrigger value="quarter">Quarter</TabsTrigger>
-                <TabsTrigger value="year">Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div>
+                <Label htmlFor="startDate">Start Date</Label>
+                <div className="relative">
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full sm:w-[180px]"
+                  />
+                  <FaCalendarAlt className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="endDate">End Date</Label>
+                <div className="relative">
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full sm:w-[180px]"
+                  />
+                  <FaCalendarAlt className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Metric Cards */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {/* Total Orders Card */}
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -264,14 +287,14 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     stroke="#0070f3"
                     strokeWidth={2}
                     fill="url(#colorOrders)"
-                    dot={false} />
+                    dot={false}
+                  />
                   <Tooltip labelFormatter={(value) => `Date: ${value}`} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          {/* Total Products Card */}
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -279,7 +302,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <FaBox className="text-amber-600" />
                   <span className="font-medium">Total Products</span>
                 </div>
-                <div className="text-3xl font-bold mt-2">{GetAllProducts.length}</div>
+                <div className="text-3xl font-bold mt-2">{filteredProducts.length}</div>
               </div>
               <Badge className={productChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                 {productChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
@@ -301,14 +324,14 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     stroke="#f59e0b"
                     strokeWidth={2}
                     fill="url(#colorProducts)"
-                    dot={false} />
+                    dot={false}
+                  />
                   <Tooltip labelFormatter={(value) => `Date: ${value}`} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          {/* Unique Customers Card */}
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -316,7 +339,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <FaUsers className="text-purple-600" />
                   <span className="font-medium">Unique Customers</span>
                 </div>
-                <div className="text-3xl font-bold mt-2">{AllUsers.length}</div>
+                <div className="text-3xl font-bold mt-2">{filteredUsers.length}</div>
               </div>
               <Badge className={userChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
                 {userChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
@@ -338,14 +361,14 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     stroke="#8b5cf6"
                     strokeWidth={2}
                     fill="url(#colorUsers)"
-                    dot={false} />
+                    dot={false}
+                  />
                   <Tooltip labelFormatter={(value) => `Date: ${value}`} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          {/* Total Revenue Card */}
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -375,7 +398,8 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     stroke="#10b981"
                     strokeWidth={2}
                     fill="url(#colorRevenue)"
-                    dot={false} />
+                    dot={false}
+                  />
                   <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -385,13 +409,10 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
 
         {/* Main Dashboard Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Chart Section - spans 2 columns */}
           <Card className="p-6 lg:col-span-2">
             <div className="flex flex-col gap-2 mb-6">
               <h3 className="text-xl font-semibold">Performance Overview</h3>
-              <p className="text-sm text-gray-500">
-                Track your key metrics over time
-              </p>
+              <p className="text-sm text-gray-500">Track your key metrics over time</p>
             </div>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -406,28 +427,19 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                       <stop offset="95%" stopColor="#0070f3" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis 
+                  <XAxis
                     dataKey="name"
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => {
-                      // Format based on time range
-                      switch(timeRange) {
-                        case 'week': return value.split('-').slice(1).join('-'); // Show MM-DD
-                        case 'month': return value.split('-').slice(1).join('-'); // Show MM-W
-                        case 'quarter': return value.split('-')[1]; // Show MM
-                        case 'year': return value.split('-')[1]; // Show Q#
-                        default: return value;
-                      }
-                    }}
+                    tickFormatter={(value) => value.split('-').slice(1).join('-')} // Show MM-DD
                   />
                   <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right" 
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value) => formatCurrency(value)}
                   />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value, name) => {
                       if (name === 'revenue') return formatCurrency(value);
                       return value;
@@ -441,7 +453,8 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     name="Orders"
                     stroke="#0070f3"
                     strokeWidth={2}
-                    fill="url(#colorOrders2)" />
+                    fill="url(#colorOrders2)"
+                  />
                   <Area
                     yAxisId="right"
                     type="monotone"
@@ -449,19 +462,17 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     name="Revenue"
                     stroke="#10b981"
                     strokeWidth={2}
-                    fill="url(#colorRevenue2)" />
+                    fill="url(#colorRevenue2)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
-          {/* User Role Distribution */}
           <Card className="p-6">
             <div className="flex flex-col gap-2 mb-6">
               <h3 className="text-xl font-semibold">Customer Segments</h3>
-              <p className="text-sm text-gray-500">
-                Distribution of users by role
-              </p>
+              <p className="text-sm text-gray-500">Distribution of users by role</p>
             </div>
             <div className="h-[300px] flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -490,14 +501,12 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
 
         {/* Bottom Section - Top Products and Recent Orders */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Top Products */}
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-semibold">Top Selling Products</h3>
                 <p className="text-sm text-gray-500">Products with highest order count</p>
               </div>
-              {/* <Button variant="outline" size="sm">View All</Button> */}
             </div>
             <div className="overflow-x-auto">
               <Table>
@@ -505,8 +514,6 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead className="text-right">Price</TableHead>
-                    {/* <TableHead className="text-right">Orders</TableHead>
-                    <TableHead className="text-right">Revenue</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -514,13 +521,11 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.productName || product.title || 'Unknown'}</TableCell>
                       <TableCell className="text-right">{formatCurrency(product.price || 0)}</TableCell>
-                      {/* <TableCell className="text-right">{product.orderCount}</TableCell> */}
-                      {/* <TableCell className="text-right">{formatCurrency(product.revenue)}</TableCell> */}
                     </TableRow>
                   ))}
                   {topProducts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-gray-500 py-4">
+                      <TableCell colSpan={2} className="text-center text-gray-500 py-4">
                         No product data available
                       </TableCell>
                     </TableRow>
@@ -530,14 +535,12 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
             </div>
           </Card>
 
-          {/* Recent Orders */}
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-semibold">Recent Orders</h3>
                 <p className="text-sm text-gray-500">Latest customer purchases</p>
               </div>
-              {/* <Button variant="outline" size="sm">View All</Button> */}
             </div>
             <div className="overflow-x-auto">
               <Table>
@@ -546,6 +549,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     <TableHead>Order ID</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead className="text-right">Pending_Amount</TableHead>
+                    <TableHead className="text-right">Paid_Amount</TableHead>
                     <TableHead className="text-right">Total_Amount</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
@@ -555,26 +559,27 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id || 'N/A'}</TableCell>
                       <TableCell>{order.customer_name || order.user_name || 'Unknown'}</TableCell>
-                      {/* <TableCell>{order.customer_name || order.user_name || 'Unknown'}</TableCell> */}
                       <TableCell className="text-right">{formatCurrency(order.pending_payment || 0)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(order.paid_payment || 0)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(order.total_amount || 0)}</TableCell>
                       <TableCell className="text-right">
-                        <Badge 
+                        <Badge
                           className={
-                            order.pending_payment === "0.00" ? 'bg-green-100 text-green-800' :
-                            // order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            order.pending_payment !== '0.00' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                            `${order.status === "pending" && 'bg-red-500'}
+                             ${order.status === "paid" && 'bg-green-500'}
+                             ${order.status === "canceled" && 'bg-orange-500'}`
                           }
                         >
-                          {order.status || 'Processing'}
+                          {order.status === "pending" && 'Processing'}
+                          {order.status === "paid" && 'Paid'}
+                          {order.status === "canceled" && 'Canceled'}
                         </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
                   {recentOrders.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-gray-500 py-4">
+                      <TableCell colSpan={6} className="text-center text-gray-500 py-4">
                         No recent orders
                       </TableCell>
                     </TableRow>
@@ -585,7 +590,6 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
           </Card>
         </div>
 
-        {/* Recent Activity */}
         {activities.length > 0 && (
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
@@ -622,7 +626,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
   );
 }
 
-// Keep the custom PieChart component
+// Keep the custom PieChart component (unchanged)
 function PieChart({ data }) {
   return (
     <div className="relative">

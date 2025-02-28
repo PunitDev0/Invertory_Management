@@ -18,13 +18,13 @@ import { Link } from "@inertiajs/react";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/admin/category", label: "Category", icon: Package },
   { href: "/admin/productname", label: "Product Name", icon: PieChart },
-  { href: "/admin/branches", label: "Branches", icon: Users },
   { href: "/admin/allproducts", label: "All Products", icon: CircleDollarSign },
-  { href: "/admin/product", label: "Add Products", icon: PlusCircle },
   { href: "/admin/user", label: "Add Users", icon: User },
   { href: "/admin/allusers", label: "All Users", icon: Users },
+  { href: "/admin/category", label: "Category", icon: Package },
+  { href: "/admin/branches", label: "Branches", icon: Users },
+  { href: "/admin/product", label: "Add Products", icon: PlusCircle },
   { href: "/admin/ordertracking", label: "Order Tracking", icon: MessageCircle },
 ];
 

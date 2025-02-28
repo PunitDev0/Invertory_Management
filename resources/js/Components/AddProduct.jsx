@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AddProductForm } from "./Forms/add-product-form";
-import {fetchProducts, fetchShops, updateProducts } from "@/lib/Apis";
+import { fetchProducts, fetchShops, updateProducts } from "@/lib/Apis";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -22,26 +22,35 @@ export default function AddProductPage({ id }) {
   const [productsName, setProductsName] = useState([]);
   const [shops, setShops] = useState([]);
 
+  // Fetch product by ID for editing
   useEffect(() => {
     const getProduct = async () => {
       if (!id) return;
       try {
-        const product = await updateProducts(id);
-        console.log(product);
-        
+        const product = await updateProducts(id); // Assuming this fetches a single product
         setProductData(product);
       } catch (err) {
         console.error("Error fetching product by ID:", err);
+        setError(err.message);
       }
     };
     getProduct();
   }, [id]);
 
+  // Fetch all products and sort by latest first
   useEffect(() => {
     const getProducts = async () => {
       try {
         const productsData = await fetchProducts();
-        setProducts(productsData.slice(0, 5)); // Get only top 5 products
+        // Sort products by created_at or updated_at (descending order for latest first)
+        const sortedProducts = productsData
+          .sort((a, b) => {
+            const dateA = new Date(a.updated_at || a.created_at);
+            const dateB = new Date(b.updated_at || b.created_at);
+            return dateB - dateA; // Latest first
+          })
+          .slice(0, 5); // Get top 5 latest products
+        setProducts(sortedProducts);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -51,24 +60,33 @@ export default function AddProductPage({ id }) {
     getProducts();
   }, []);
 
-  const fetchAndSetShops = async () => {
-    try {
-      const shopsData = await fetchShops();
-      setShops(shopsData);
-    } catch (error) {
-      console.error("Error fetching shops:", error);
-    }
-  };
+  // Fetch shops
+  useEffect(() => {
+    const fetchAndSetShops = async () => {
+      try {
+        const shopsData = await fetchShops();
+        setShops(shopsData || []);
+      } catch (error) {
+        console.error("Error fetching shops:", error);
+        setError(error.message);
+      }
+    };
+    fetchAndSetShops();
+  }, []);
 
   return (
-    <div className="md:p-6">
+    <div className="md:p-6 space-y-6">
       {/* Left Side - Forms */}
-      <AddProductForm productData={productData} productsName={productsName} />
+      <AddProductForm 
+        productData={productData} 
+        productsName={productsName} 
+        shops={shops} // Pass shops data to the form if needed
+      />
 
       {/* Right Side - Table */}
       <Card className="shadow-lg rounded-xl bg-white">
         <CardContent className="p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-700">Recently Added</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-700">Recently Added Products</h2>
 
           {error ? (
             <Alert variant="destructive" className="mb-4">
@@ -90,6 +108,7 @@ export default function AddProductPage({ id }) {
                     <TableHead className="text-left text-gray-600">Name</TableHead>
                     <TableHead className="text-left text-gray-600">Category</TableHead>
                     <TableHead className="text-left text-gray-600">Price</TableHead>
+                    <TableHead className="text-left text-gray-600">Date Added</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -100,11 +119,14 @@ export default function AddProductPage({ id }) {
                         <TableCell className="font-medium">{product.productName}</TableCell>
                         <TableCell>{product.category}</TableCell>
                         <TableCell className="font-mono">{product.price}</TableCell>
+                        <TableCell>
+                          {new Date(product.updated_at || product.created_at).toLocaleDateString()}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan="4" className="h-24 text-center text-gray-500">
+                      <TableCell colSpan="5" className="h-24 text-center text-gray-500">
                         No products found.
                       </TableCell>
                     </TableRow>

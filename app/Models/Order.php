@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
 class Order extends Model
 {
     use HasFactory;
 
     // Specify the table name (optional if the table name is pluralized version of the model)
-    // The table associated with the model
     protected $table = 'userorders';
 
     // The attributes that are mass assignable
@@ -25,10 +25,18 @@ class Order extends Model
         'total_amount',
         'pending_payment',
         'products', // Store the products as a JSON field
+        'delivered_date',
+        'status',
     ];
 
-    // If the products column is a JSON field, you can cast it to an array
+    // Cast the 'products' field to an array
     protected $casts = [
         'products' => 'array',  // Automatically cast the 'products' field to an array
     ];
+
+    // Define the relationship between Order and OrderpaymentLog
+    public function paymentLogs()
+    {
+        return $this->hasMany(OrderpaymentLog::class, 'order_id');
+    }
 }

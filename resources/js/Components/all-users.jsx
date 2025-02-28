@@ -28,6 +28,8 @@ export default function AllUsers({ setActiveSection, setUserData }) {
     const getUsers = async () => {
       try {
         const usersData = await fetchUsers();
+        console.log(usersData);
+        
         setUsers(usersData.users);
       } catch (err) {
         setError(err.message);
@@ -36,7 +38,7 @@ export default function AllUsers({ setActiveSection, setUserData }) {
       }
     };
     getUsers();
-  }, [users]);
+  }, []);
 
   const handleAction = async (action, user) => {
     if (action === "edit") {

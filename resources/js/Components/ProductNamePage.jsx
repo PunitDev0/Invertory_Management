@@ -12,11 +12,16 @@ import { Pencil, Trash } from 'lucide-react';
 import 'react-toastify/dist/ReactToastify.css';
 
 function ProductNamePage() {
-  const methods = useForm();
+  const methods = useForm({
+    defaultValues: {
+      product_category_name: '',
+      category_id: '',
+    },
+  });
   const { control, handleSubmit, formState: { errors }, reset } = methods;
   const [categories, setCategories] = useState([]);
   const [productNames, setProductNames] = useState([]);
-  const [editingProduct, setEditingProduct] = useState(null); // State to track the product being edited
+  const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
     fetchCategoryData();
@@ -24,88 +29,115 @@ function ProductNamePage() {
   }, []);
 
   const fetchCategoryData = async () => {
-    const response = await fetchCategories();
-    setCategories(response);
+    try {
+      const response = await fetchCategories();
+      setCategories(response || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
+    }
   };
 
   const fetchProductNameData = async () => {
-    const response = await fetchProductNames();
-    setProductNames(response);
+    try {
+      const response = await fetchProductNames();
+      setProductNames(response || []);
+    } catch (error) {
+      console.error('Error fetching product names:', error);
+      toast.error('Failed to load product names');
+    }
   };
 
   const onSubmit = async (data) => {
     try {
-      const payload = { name: data.product_category_name, category_id: data.category_id };
-      console.log(payload);
-      
+      const payload = { 
+        name: data.product_category_name.trim(), 
+        category_id: parseInt(data.category_id) 
+      };
+
       if (editingProduct) {
-        // Update existing product
-        console.log(payload);
         await editProductName(editingProduct.id, payload);
-        
         toast.success('Product Name Updated Successfully!');
       } else {
-        // Add new product
         await addProductName(payload);
         toast.success('Product Name Added Successfully!');
       }
 
-      fetchProductNameData(); // Refresh the product list
-      reset(); // Reset the form
-      setEditingProduct(null); // Clear editing state
+      await fetchProductNameData(); // Refresh product list
+      resetForm(); // Reset form and editing state
     } catch (error) {
       console.error('Error adding/updating product:', error);
       toast.error(error.response?.data?.message || 'Failed to add/update product');
     }
   };
 
+  const resetForm = () => {
+    reset({
+      product_category_name: '',
+      category_id: '',
+    });
+    setEditingProduct(null);
+  };
+
   const handleEdit = (product) => {
-    setEditingProduct(product); // Set the product being edited
+    setEditingProduct(product);
     reset({
       product_category_name: product.name,
       category_id: String(product.category_id),
-    }); // Populate the form with the product's data
+    });
   };
 
   const handleDelete = async (productNameId) => {
-    console.log('Delete product name:', productNameId);
-    const response = await deleteProductName(productNameId);
-    if (response.message) {
-      toast.success(`${response.message}`);
-      fetchProductNameData();
-    } else {
-      toast.error('Failed to delete product name');
+    try {
+      const response = await deleteProductName(productNameId);
+      if (response.message) {
+        toast.success(`${response.message}`);
+        await fetchProductNameData();
+      } else {
+        toast.error('Failed to delete product name');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete product');
     }
   };
 
   const handleCancelEdit = () => {
-    setEditingProduct(null); // Clear editing state
-    reset(); // Reset the form
+    resetForm();
   };
 
   return (
-    <div className="p-6 flex flex-col items-center w-full">
+    <div className="p-6 flex flex-col items-center w-full min-h-screen">
       <h1 className="text-2xl font-bold mb-6">Product Names</h1>
-      <Card className="p-8 shadow-lg rounded-lg bg-white max-w-2xl w-full">
+      
+      <Card className="p-8 shadow-lg rounded-lg bg-white max-w-2xl w-full mb-8">
         <h3 className="text-2xl font-semibold mb-4 text-gray-800">
           {editingProduct ? 'Edit Product Name' : 'Add Product Name with Category'}
         </h3>
         <FormProvider {...methods}>
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <FormField
               control={control}
               name="product_category_name"
-              rules={{ required: "Product name is required" }}
+              rules={{ 
+                required: "Product name is required",
+                minLength: { value: 2, message: "Product name must be at least 2 characters" }
+              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product Name</FormLabel>
                   <FormControl>
-                    <Input {...field} className="p-4 border border-gray-300 rounded-md w-full" placeholder="Enter product name" />
+                    <Input 
+                      {...field} 
+                      className="p-4 border border-gray-300 rounded-md w-full" 
+                      placeholder="Enter product name"
+                    />
                   </FormControl>
                   <FormMessage>{errors.product_category_name?.message}</FormMessage>
                 </FormItem>
               )}
             />
+            
             <FormField
               control={control}
               name="category_id"
@@ -117,15 +149,20 @@ function ProductNamePage() {
                     <Controller
                       name="category_id"
                       control={control}
-                      rules={{ required: "Category is required" }}
-                      render={({ field }) => (
-                        <Select onValueChange={(value) => field.onChange(value)} value={field.value || ""}>
-                          <SelectTrigger>
+                      render={({ field: { onChange, value } }) => (
+                        <Select 
+                          onValueChange={onChange} 
+                          value={value}
+                        >
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select a category" />
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map((category) => (
-                              <SelectItem key={category.id} value={String(category.id)}>
+                              <SelectItem 
+                                key={category.id} 
+                                value={String(category.id)}
+                              >
                                 {category.name}
                               </SelectItem>
                             ))}
@@ -138,37 +175,42 @@ function ProductNamePage() {
                 </FormItem>
               )}
             />
-            <div className="flex space-x-2">
-              <Button type="submit" className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-md">
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-md"
+              >
                 {editingProduct ? 'Update Product Name' : 'Add Product Name'}
               </Button>
               {editingProduct && (
                 <Button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-md"
+                  className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-md"
                 >
-                  Cancel Edit
+                  Cancel
                 </Button>
               )}
             </div>
           </form>
         </FormProvider>
       </Card>
-      <div className="mt-6 w-full flex justify-center">
-        <div className="w-full max-w-4xl">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-center">ID</TableHead>
-                <TableHead className="text-center">Product Name</TableHead>
-                <TableHead className="text-center">Category</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {productNames.map((product) => (
-                <TableRow key={product.id}>
+
+      <div className="w-full max-w-4xl">
+        <Table className="w-full border rounded-lg">
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="text-center font-semibold">ID</TableHead>
+              <TableHead className="text-center font-semibold">Product Name</TableHead>
+              <TableHead className="text-center font-semibold">Category</TableHead>
+              <TableHead className="text-center font-semibold">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {productNames.length > 0 ? (
+              productNames.map((product) => (
+                <TableRow key={product.id} className="hover:bg-gray-100">
                   <TableCell className="text-center">{product.id}</TableCell>
                   <TableCell className="text-center">{product.name}</TableCell>
                   <TableCell className="text-center">
@@ -176,19 +218,35 @@ function ProductNamePage() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex space-x-2 justify-center">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
-                        <Pencil className="h-4 w-4 mr-2" /> Edit
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEdit(product)}
+                        className="flex items-center gap-2"
+                      >
+                        <Pencil className="h-4 w-4" /> Edit
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
-                        <Trash className="h-4 w-4 mr-2" /> Delete
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleDelete(product.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash className="h-4 w-4" /> Delete
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                  No product names available
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
