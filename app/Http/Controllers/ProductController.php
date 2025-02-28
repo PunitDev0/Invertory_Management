@@ -6,7 +6,7 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    // Function to add a product
+    // Function to add a produc
     public function addProduct(Request $request)
     {
         // Validate the request data
