@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/nikatbytest/public_html/nikatbybanking
+    - /bin/cp -R * $DEPLOYPATH
