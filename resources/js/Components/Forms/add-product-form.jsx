@@ -37,6 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { Inertia } from "@inertiajs/inertia";
 
 export function AddProductForm({ productData }) {
   const [categories, setCategories] = useState([]);
@@ -142,10 +143,21 @@ export function AddProductForm({ productData }) {
 
       if (productData) {
         const response = await updateProducts(productData.id, formData);
-        if (response.status === 200) {
-          toast.success("Product updated successfully");
-          window.location.reload();
-        }
+        toast.success("Product updated successfully");
+        // reset({
+        //   productName: "",
+        //   category:  "",
+        //   owned_imported: "",
+        //   price: "",
+        //   stock_quantity: "",
+        //   description: "",
+        //   companyName: "",
+        //   shop_name: "",
+        // });
+        Inertia.visit('/admin/allproducts')
+          // window.location.reload();
+        // if (response.status === 201) {
+        // }
       } else {
         const response = await axios.post("/api/products/add", formData, {
           headers: {
