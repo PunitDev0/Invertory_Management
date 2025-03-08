@@ -35,16 +35,8 @@ export function Sidebar({ className, user }) {
 
   return (
     <div className={cn("flex h-full w-full flex-col bg-[#2D2D2D] text-white z-[1000]", className)}>
-      <div className="flex h-16 items-center border-b border-white/10 px-6">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-black font-bold">N</span>
-          </div>
-          <span className="text-xl font-semibold">Nikatby</span>
-        </div>
-      </div>
+      
       <div className="flex flex-col items-center p-6">
-        <div className="w-24 h-24 rounded-full overflow-hidden mb-4"></div>
         <div className="text-center">
           <div className="text-sm text-gray-400">Welcome Back,</div>
           <div className="font-semibold">{user?.name}</div>

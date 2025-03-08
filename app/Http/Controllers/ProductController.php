@@ -86,9 +86,9 @@ class ProductController extends Controller
             ]);
 
             if ($request->owned_imported === 'owned') {
-                $updateData['shop_name'] = null;
-            } else {
                 $updateData['companyName'] = null;
+            } else {
+                $updateData['shop_name'] = null;
             }
 
             $product->update($updateData);

@@ -136,9 +136,9 @@ export function AddProductForm({ productData }) {
       };
 
       if (data.owned_imported === "owned") {
-        formData.companyName = data.companyName || "";
-      } else {
         formData.shop_name = data.shop_name || "";
+      } else {
+        formData.companyName = data.companyName || "";
       }
 
       if (productData) {
@@ -154,12 +154,12 @@ export function AddProductForm({ productData }) {
         //   companyName: "",
         //   shop_name: "",
         // });
-        Inertia.visit('/admin/allproducts')
+        // Inertia.visit('/admin/allproducts')
           // window.location.reload();
         // if (response.status === 201) {
         // }
       } else {
-        const response = await axios.post("/api/products/add", formData, {
+        const response = await axios.post("/products/add", formData, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -386,55 +386,54 @@ export function AddProductForm({ productData }) {
               )}
             />
 
-            {ownedImportedValue === "owned" ? (
-              <FormField
-                control={control}
-                name="companyName"
-                rules={{ required: "Company Name is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter company name"
-                      />
-                    </FormControl>
-                    <FormMessage>{errors.companyName?.message}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <FormField
-                control={control}
-                name="shop_name"
-                rules={{ required: "Branch is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Branch</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Branch" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shops.map((shop) => (
-                            <SelectItem key={shop.id} value={shop.name}>
-                              {shop.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage>{errors.shop_name?.message}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            )}
-
+{ownedImportedValue === "owned" ? (
+  <FormField
+    control={control}
+    name="shop_name"
+    rules={{ required: "Branch is required" }}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Branch</FormLabel>
+        <FormControl>
+          <Select
+            onValueChange={field.onChange}
+            value={field.value}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Branch" />
+            </SelectTrigger>
+            <SelectContent>
+              {shops.map((shop) => (
+                <SelectItem key={shop.id} value={shop.name}>
+                  {shop.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormControl>
+        <FormMessage>{errors.shop_name?.message}</FormMessage>
+      </FormItem>
+    )}
+  />
+) : (
+  <FormField
+    control={control}
+    name="companyName"
+    rules={{ required: "Company Name is required" }}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Company Name</FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            placeholder="Enter company name"
+          />
+        </FormControl>
+        <FormMessage>{errors.companyName?.message}</FormMessage>
+      </FormItem>
+    )}
+  />
+)}
             <Button type="submit" className="w-full bg-indigo-600 text-white hover:bg-indigo-700">
               {productData ? "Update Product" : "Add Product"}
             </Button>
