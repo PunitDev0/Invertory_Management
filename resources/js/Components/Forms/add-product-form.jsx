@@ -154,7 +154,7 @@ export function AddProductForm({ productData }) {
         //   companyName: "",
         //   shop_name: "",
         // });
-        // Inertia.visit('/admin/allproducts')
+        Inertia.visit('/admin/allproducts')
           // window.location.reload();
         // if (response.status === 201) {
         // }
@@ -166,7 +166,16 @@ export function AddProductForm({ productData }) {
         });
         if (response.status === 201 || response.status === 200) {
           toast.success("Product added successfully");
-          reset();
+           reset({
+          productName: "",
+          category:  "",
+          owned_imported: "",
+          price: "",
+          stock_quantity: "",
+          description: "",
+          companyName: "",
+          shop_name: "",
+        });
         }
       }
     } catch (error) {
