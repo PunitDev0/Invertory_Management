@@ -9,8 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink } from "@/components/ui/pagination";
+import { UpdateOrders } from "@/lib/Apis";
+import { toast } from "react-toastify";
 
-export default function OrderTracking({ userorders }) {
+export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added onUpdateOrder prop
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -18,20 +20,82 @@ export default function OrderTracking({ userorders }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showPaymentLogs, setShowPaymentLogs] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedOrder, setEditedOrder] = useState(null);
   const ordersPerPage = 10;
 
   const handleOrderClick = (order) => {
     setSelectedOrder(order);
+    setEditedOrder({ ...order });
     setShowPaymentLogs(false);
+    setIsEditing(false);
   };
 
   const closeModal = () => {
     setSelectedOrder(null);
     setShowPaymentLogs(false);
+    setIsEditing(false);
   };
 
   const togglePaymentLogs = () => {
     setShowPaymentLogs(!showPaymentLogs);
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedOrder(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      // Prepare the data to send to the API
+      const orderData = {
+        user_email: editedOrder.user_email,
+        user_phone: editedOrder.user_phone,
+        user_address: editedOrder.user_address,
+        user_city: editedOrder.user_city,
+        user_zip: editedOrder.user_zip,
+        created_at: editedOrder.created_at,
+        delivered_date: editedOrder.delivered_date || null,
+        total_amount: parseFloat(editedOrder.total_amount),
+        paid_payment: parseFloat(editedOrder.paid_payment),
+        pending_payment: parseFloat(editedOrder.pending_payment),
+      };
+      console.log(orderData);
+      
+
+      // Call the API with the order ID and data
+      const response = await UpdateOrders(editedOrder.id, orderData);
+      console.log('API Response:', response);
+
+      // Check if the update was successful
+      if (response) {
+        // Update the parent component with the returned data
+        if (onUpdateOrder) {
+          onUpdateOrder(response.data);
+        }
+        // Update local state with the server's response
+        setSelectedOrder(response.data);
+        setIsEditing(false);
+        toast.success('Order updated successfully');
+        window.location.reload();
+      } else {
+        throw new Error(response.message || 'Failed to update order');
+      }
+    } catch (error) {
+      console.error('Error in handleSaveChanges:', error);
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.values(error.response.data.errors)
+          .flat()
+          .join('\n');
+        alert(`Validation failed:\n${errorMessages}`);
+      } else {
+        alert(`Failed to update order: ${error.message}`);
+      }
+    }
   };
 
   const formatDate = (dateString) => {
@@ -48,8 +112,8 @@ export default function OrderTracking({ userorders }) {
 
   const filteredOrders = useMemo(() => {
     return userorders
-      .slice() // Create a copy to avoid mutating the original array
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Sort by latest first
+      .slice()
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .filter((order) => {
         const orderDate = new Date(order.created_at);
         const start = startDate ? new Date(startDate) : null;
@@ -79,7 +143,7 @@ export default function OrderTracking({ userorders }) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen">
-      {/* Filter Section */}
+      {/* Rest of your JSX remains the same until the return statement */}
       <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white mb-8 transform transition-all hover:scale-[1.01]">
         <CardContent className="p-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 tracking-tight">
@@ -371,85 +435,189 @@ export default function OrderTracking({ userorders }) {
           )}
         </CardContent>
       </Card>
-
-      {/* Enhanced Modal for Order Details */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 sm:p-6 animate-fade-in">
           <Card className="w-full max-w-lg sm:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-            {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 tracking-tight sticky top-0 bg-white z-10">
-                Order Details
-              </h2>
+              <div className="flex justify-between items-center sticky top-0 bg-white z-10 pb-4">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                  Order Details
+                </h2>
+                <Button
+                  onClick={handleEditToggle}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md"
+                >
+                  {isEditing ? "Cancel Edit" : "Edit Order"}
+                </Button>
+              </div>
+              
               <div className="space-y-4 text-sm sm:text-base text-gray-700">
-                <p><strong className="text-gray-900">ID:</strong> {selectedOrder.id}</p>
-                <p><strong className="text-gray-900">User Name:</strong> {selectedOrder.user_name}</p>
-                <p><strong className="text-gray-900">User Email:</strong> {selectedOrder.user_email}</p>
-                <p><strong className="text-gray-900">User Phone:</strong> {selectedOrder.user_phone}</p>
-                <p><strong className="text-gray-900">User Address:</strong> {selectedOrder.user_address}</p>
-                <p><strong className="text-gray-900">User City:</strong> {selectedOrder.user_city}</p>
-                <p><strong className="text-gray-900">User Zip:</strong> {selectedOrder.user_zip}</p>
-                <p>
-                  <strong className="text-gray-900">Order Date:</strong> {formatDate(selectedOrder.created_at)}{" "}
-                  {formatTime(selectedOrder.created_at)}
-                </p>
-                <p>
-                  <strong className="text-gray-900">Delivered Date:</strong> {formatDate(selectedOrder.delivered_date) || "N/A"}
-                </p>
-                <p>
-                  <strong className="text-gray-900">Updated At:</strong> {formatDate(selectedOrder.updated_at)}{" "}
-                  {formatTime(selectedOrder.updated_at)}
-                </p>
-                <div className="flex items-center">
-                  <strong className="text-gray-900">Total Amount:</strong>
-                  <IndianRupee size={16} className="mx-2 text-gray-600" />
-                  <span className="font-medium">{selectedOrder.total_amount}</span>
-                </div>
-                <div className="flex items-center">
-                  <strong className="text-gray-900">Paid Payment:</strong>
-                  <IndianRupee size={16} className="mx-2 text-gray-600" />
-                  <span className="font-medium">{selectedOrder.paid_payment}</span>
-                </div>
-                <div className="flex items-center">
-                  <strong className="text-gray-900">Pending Payment:</strong>
-                  <IndianRupee size={16} className="mx-2 text-gray-600" />
-                  <span className="font-medium">{selectedOrder.pending_payment}</span>
-                </div>
-                <p><strong className="text-gray-900">Products:</strong></p>
-                <ul className="list-disc pl-6 space-y-2">
-                  {selectedOrder.products.map((product, index) => (
-                    <li key={index} className="text-gray-700">
-                      <strong>Name:</strong> {product.product_name}, <strong>Qty:</strong> {product.quantity},{" "}
-                      <strong>Price:</strong>{" "}
-                      <IndianRupee size={14} className="inline text-gray-600" />
-                      {product.product_price}
-                    </li>
-                  ))}
-                </ul>
+                {isEditing ? (
+                  <>
+                    <div>
+                      <Label>ID:</Label>
+                      <Input value={editedOrder.id} disabled className="mt-1" />
+                    </div>
+                    <div>
+                      <Label>User Name:</Label>
+                      <Input value={editedOrder.user_name} disabled className="mt-1" />
+                    </div>
+                    <div>
+                      <Label>Order Date:</Label>
+                      <div className="relative mt-1">
+                        <Input
+                          type="datetime-local"
+                          value={editedOrder.created_at ? new Date(editedOrder.created_at).toISOString().slice(0,16) : ""}
+                          onChange={(e) => handleInputChange("created_at", e.target.value)}
+                          className="w-full border-gray-300 rounded-lg shadow-sm"
+                        />
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>User Email:</Label>
+                      <Input
+                        value={editedOrder.user_email}
+                        onChange={(e) => handleInputChange("user_email", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>User Phone:</Label>
+                      <Input
+                        value={editedOrder.user_phone}
+                        onChange={(e) => handleInputChange("user_phone", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>User Address:</Label>
+                      <Input
+                        value={editedOrder.user_address}
+                        onChange={(e) => handleInputChange("user_address", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>User City:</Label>
+                      <Input
+                        value={editedOrder.user_city}
+                        onChange={(e) => handleInputChange("user_city", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>User Zip:</Label>
+                      <Input
+                        value={editedOrder.user_zip}
+                        onChange={(e) => handleInputChange("user_zip", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Delivered Date:</Label>
+                      <Input
+                        type="date"
+                        value={editedOrder.delivered_date?.split("T")[0] || ""}
+                        onChange={(e) => handleInputChange("delivered_date", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Total Amount:</Label>
+                      <Input
+                        type="number"
+                        value={editedOrder.total_amount}
+                        onChange={(e) => handleInputChange("total_amount", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Paid Payment:</Label>
+                      <Input
+                        type="number"
+                        value={editedOrder.paid_payment}
+                        onChange={(e) => handleInputChange("paid_payment", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Pending Payment:</Label>
+                      <Input
+                        type="number"
+                        value={editedOrder.pending_payment}
+                        onChange={(e) => handleInputChange("pending_payment", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p><strong>ID:</strong> {selectedOrder.id}</p>
+                    <p><strong>User Name:</strong> {selectedOrder.user_name}</p>
+                    <p>
+                      <strong>Order Date:</strong> {formatDate(selectedOrder.created_at)}{" "}
+                      {formatTime(selectedOrder.created_at)}
+                    </p>
+                    <p><strong>User Email:</strong> {selectedOrder.user_email}</p>
+                    <p><strong>User Phone:</strong> {selectedOrder.user_phone}</p>
+                    <p><strong>User Address:</strong> {selectedOrder.user_address}</p>
+                    <p><strong>User City:</strong> {selectedOrder.user_city}</p>
+                    <p><strong>User Zip:</strong> {selectedOrder.user_zip}</p>
+                    <p>
+                      <strong>Delivered Date:</strong> {formatDate(selectedOrder.delivered_date) || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Updated At:</strong> {formatDate(selectedOrder.updated_at)}{" "}
+                      {formatTime(selectedOrder.updated_at)}
+                    </p>
+                    <div className="flex items-center">
+                      <strong>Total Amount:</strong>
+                      <IndianRupee size={16} className="mx-2" />
+                      <span>{selectedOrder.total_amount}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong>Paid Payment:</strong>
+                      <IndianRupee size={16} className="mx-2" />
+                      <span>{selectedOrder.paid_payment}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <strong>Pending Payment:</strong>
+                      <IndianRupee size={16} className="mx-2" />
+                      <span>{selectedOrder.pending_payment}</span>
+                    </div>
+                    <p><strong>Products:</strong></p>
+                    <ul className="list-disc pl-6 space-y-2">
+                      {selectedOrder.products.map((product, index) => (
+                        <li key={index}>
+                          <strong>Name:</strong> {product.product_name}, <strong>Qty:</strong> {product.quantity},{" "}
+                          <strong>Price:</strong> <IndianRupee size={14} className="inline" />{product.product_price}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
 
                 {/* Payment Logs Section */}
                 {selectedOrder.payment_logs && selectedOrder.payment_logs.length > 0 && (
                   <>
                     <Button
                       onClick={togglePaymentLogs}
-                      className="mt-6 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors"
+                      className="mt-6 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md"
                     >
                       {showPaymentLogs ? "Hide Payment Logs" : `See Payment Logs (${selectedOrder.payment_logs.length})`}
                     </Button>
                     {showPaymentLogs && (
                       <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">
-                        <p className="text-gray-900 font-semibold mb-3">Payment Logs:</p>
+                        <p className="font-semibold mb-3">Payment Logs:</p>
                         <div className="max-h-64 overflow-y-auto">
                           <ul className="list-disc pl-6 space-y-3">
                             {selectedOrder.payment_logs.map((log, index) => (
-                              <li key={index} className="text-gray-700 bg-white p-3 rounded-md shadow-sm">
+                              <li key={index} className="bg-white p-3 rounded-md shadow-sm">
+                                <div><strong>Payment ID:</strong> {log.id}</div>
                                 <div>
-                                  <strong>Payment ID:</strong> {log.id}
-                                </div>
-                                <div>
-                                  <strong>Amount:</strong>{" "}
-                                  <IndianRupee size={14} className="inline text-gray-600" />
-                                  <span className="font-medium">{log.payment_amount}</span>
+                                  <strong>Amount:</strong> <IndianRupee size={14} className="inline" />
+                                  <span>{log.payment_amount}</span>
                                 </div>
                                 <div>
                                   <strong>Date:</strong> {formatDate(log.created_at)}{" "}
@@ -467,10 +635,18 @@ export default function OrderTracking({ userorders }) {
             </div>
 
             {/* Fixed Footer */}
-            <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end sticky bottom-0">
+            <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end sticky bottom-0 gap-2">
+              {isEditing && (
+                <Button
+                  onClick={handleSaveChanges}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md"
+                >
+                  Save Changes
+                </Button>
+              )}
               <Button
                 onClick={closeModal}
-                className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md transition-colors"
+                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg shadow-md"
               >
                 Close
               </Button>

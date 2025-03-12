@@ -221,6 +221,21 @@ export const fetchOrders = async () => {
   }
 };
 
+export const UpdateOrders = async (id,data) => {
+  try {
+    const response = await axios.put(`/orders/update/${id}`, data);
+     console.log(response.data.success );
+     
+    return response.data.success    ; // Ensure this matches the Laravel API response
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw error;
+  }
+};
+
+
+
+
 export const addShop = async (data) => {
   try {
     const response = await axios.post(`/shops`, data);
@@ -258,5 +273,32 @@ export const editShops = async (id, data) => {
   } catch (error) {
     console.error('Not Store Shops Data', error);
     throw error;
+  }
+};
+
+export const fetchSupportRequests = async () => {
+  try {
+    const response = await axios.get(`/support/support-requests`);
+    return response.data;
+  } catch (error) {
+    throw new Error("Failed to fetch support requests: " + (error.response?.data?.message || error.message));
+  }
+};
+
+// Update support request status
+export const updateSupportRequestStatus = async (id, status) => {
+  try {
+    const response = await axios.put(
+      `/support/support-requests/${id}/status`,
+      { status },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    throw new Error("Failed to update status: " + (error.response?.data?.message || error.message));
   }
 };

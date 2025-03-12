@@ -14,19 +14,18 @@ class Order extends Model
 
     // The attributes that are mass assignable
     protected $fillable = [
-        'user_id',
         'user_name',
         'user_email',
         'user_phone',
         'user_address',
         'user_city',
         'user_zip',
-        'paid_payment',
-        'total_amount',
-        'pending_payment',
-        'products', // Store the products as a JSON field
+        'created_at',
         'delivered_date',
-        'status',
+        'total_amount',
+        'paid_payment',
+        'pending_payment',
+        'updated_at'
     ];
 
     // Cast the 'products' field to an array

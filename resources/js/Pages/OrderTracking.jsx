@@ -11,7 +11,6 @@ function Page() {
       const getOrders = async () => {
         try {
           const fetchedOrders = await fetchOrders();
-          console.log(fetchOrders);
           
           setOrders(fetchedOrders);
           setLoading(false);

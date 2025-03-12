@@ -26,6 +26,7 @@ const navItems = [
   { href: "/admin/branches", label: "Branches", icon: Users },
   { href: "/admin/product", label: "Add Products", icon: PlusCircle },
   { href: "/admin/ordertracking", label: "Order Tracking", icon: MessageCircle },
+  { href: "/admin/support-request", label: "Suport ", icon: MessageCircle },
 ];
 
 export function Sidebar({ className, user }) {

@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductNameController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SupportRequestController;
 use App\Http\Controllers\UpdateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,9 @@ Route::get('/admin/branches', function(){
 });
 Route::get('/admin/allproducts', function(){
     return Inertia::render('AllProducts');
+});
+Route::get('/admin/support-request', function(){
+    return Inertia::render('Support');
 });
 
 Route::get('/admin/product/{id?}', function( $id = null){
@@ -104,4 +108,10 @@ Route::prefix('users')->group(function () {
 
 Route::prefix('orders')->group(function () {
     Route::get('/list', [OrderController::class, 'getAllOrders']);
+    Route::put('/update/{id}', [OrderController::class, 'update']);
 });
+Route::prefix('support')->group(function () {
+    Route::get('/support-requests', [SupportRequestController::class, 'index']);
+    Route::put('/support-requests/{id}/status', [SupportRequestController::class, 'updateStatus']);
+});
+
