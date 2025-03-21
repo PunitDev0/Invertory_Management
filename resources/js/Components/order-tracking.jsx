@@ -34,7 +34,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api", // Adjust to your Laravel API base URL
+  baseURL: "", // Adjust to your Laravel API base URL
   headers: {
     "Content-Type": "application/json",
   },
