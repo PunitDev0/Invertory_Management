@@ -1,18 +1,46 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { IndianRupee, Calendar, Search } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from "@/components/ui/pagination";
 import { UpdateOrders } from "@/lib/Apis";
 import { toast } from "react-toastify";
+import axios from "axios";
 
-export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added onUpdateOrder prop
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8000/api", // Adjust to your Laravel API base URL
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export default function OrderTracking({ userorders, onUpdateOrder }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -22,7 +50,26 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
   const [showPaymentLogs, setShowPaymentLogs] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedOrder, setEditedOrder] = useState(null);
+  const [expenses, setExpenses] = useState([]);
   const ordersPerPage = 10;
+
+  // Fetch expenses on mount
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const response = await api.get("/expenses");
+        if (response.data.success) {
+          setExpenses(response.data.data);
+        } else {
+          throw new Error(response.data.message || "Failed to fetch expenses");
+        }
+      } catch (error) {
+        console.error("Error fetching expenses:", error);
+        toast.error("Failed to load expenses");
+      }
+    };
+    fetchExpenses();
+  }, []);
 
   const handleOrderClick = (order) => {
     setSelectedOrder(order);
@@ -46,12 +93,11 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
   };
 
   const handleInputChange = (field, value) => {
-    setEditedOrder(prev => ({ ...prev, [field]: value }));
+    setEditedOrder((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSaveChanges = async () => {
     try {
-      // Prepare the data to send to the API
       const orderData = {
         user_email: editedOrder.user_email,
         user_phone: editedOrder.user_phone,
@@ -64,36 +110,29 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
         paid_payment: parseFloat(editedOrder.paid_payment),
         pending_payment: parseFloat(editedOrder.pending_payment),
       };
-      console.log(orderData);
-      
 
-      // Call the API with the order ID and data
       const response = await UpdateOrders(editedOrder.id, orderData);
-      console.log('API Response:', response);
 
-      // Check if the update was successful
       if (response) {
-        // Update the parent component with the returned data
         if (onUpdateOrder) {
           onUpdateOrder(response.data);
         }
-        // Update local state with the server's response
         setSelectedOrder(response.data);
         setIsEditing(false);
-        toast.success('Order updated successfully');
+        toast.success("Order updated successfully");
         window.location.reload();
       } else {
-        throw new Error(response.message || 'Failed to update order');
+        throw new Error(response.message || "Failed to update order");
       }
     } catch (error) {
-      console.error('Error in handleSaveChanges:', error);
+      console.error("Error in handleSaveChanges:", error);
       if (error.response?.data?.errors) {
         const errorMessages = Object.values(error.response.data.errors)
           .flat()
-          .join('\n');
-        alert(`Validation failed:\n${errorMessages}`);
+          .join("\n");
+        toast.error(`Validation failed:\n${errorMessages}`);
       } else {
-        alert(`Failed to update order: ${error.message}`);
+        toast.error(`Failed to update order: ${error.message}`);
       }
     }
   };
@@ -101,13 +140,34 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   const formatTime = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const calculateTotalExpenses = (orderId) => {
+    const orderExpenses = expenses.filter((exp) => exp.order_id.toString() === orderId.toString());
+    return orderExpenses.reduce((total, exp) => {
+      if (Array.isArray(exp.expenses)) {
+        return (
+          total +
+          exp.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0)
+        );
+      }
+      return total;
+    }, 0).toFixed(2);
+  };
+
+  const getOrderExpenses = (orderId) => {
+    return expenses.filter((exp) => exp.order_id.toString() === orderId.toString());
   };
 
   const filteredOrders = useMemo(() => {
@@ -143,7 +203,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen">
-      {/* Rest of your JSX remains the same until the return statement */}
+      {/* Filter Orders */}
       <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white mb-8 transform transition-all hover:scale-[1.01]">
         <CardContent className="p-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-gray-900 tracking-tight">
@@ -151,7 +211,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">Start Date</Label>
+              <Label htmlFor="startDate" className="text-sm font-medium text-gray-700">
+                Start Date
+              </Label>
               <div className="relative mt-1">
                 <Input
                   id="startDate"
@@ -164,7 +226,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
               </div>
             </div>
             <div>
-              <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">End Date</Label>
+              <Label htmlFor="endDate" className="text-sm font-medium text-gray-700">
+                End Date
+              </Label>
               <div className="relative mt-1">
                 <Input
                   id="endDate"
@@ -177,7 +241,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
               </div>
             </div>
             <div>
-              <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
+              <Label htmlFor="status" className="text-sm font-medium text-gray-700">
+                Status
+              </Label>
               <Select onValueChange={setStatusFilter} value={statusFilter} className="mt-1">
                 <SelectTrigger id="status" className="w-full border-gray-300 rounded-lg shadow-sm">
                   <SelectValue placeholder="Select status" />
@@ -190,7 +256,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
               </Select>
             </div>
             <div className="sm:col-span-2 lg:col-span-1">
-              <Label htmlFor="search" className="text-sm font-medium text-gray-700">Search</Label>
+              <Label htmlFor="search" className="text-sm font-medium text-gray-700">
+                Search
+              </Label>
               <div className="relative mt-1">
                 <Input
                   id="search"
@@ -253,6 +321,13 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                       <div className="flex items-center font-medium">
                         <IndianRupee size={14} className="mr-1 text-gray-600" />
                         <span>{order.pending_payment}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-gray-700">
+                      <span>Total Expenses:</span>
+                      <div className="flex items-center font-medium">
+                        <IndianRupee size={14} className="mr-1 text-gray-600" />
+                        <span>{calculateTotalExpenses(order.id)}</span>
                       </div>
                     </div>
                     <div className="flex justify-end mt-2">
@@ -321,6 +396,13 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                           <span>{order.pending_payment}</span>
                         </div>
                       </div>
+                      <div className="flex justify-between items-center text-sm text-gray-700">
+                        <span>Total Expenses:</span>
+                        <div className="flex items-center font-medium">
+                          <IndianRupee size={14} className="mr-1 text-gray-600" />
+                          <span>{calculateTotalExpenses(order.id)}</span>
+                        </div>
+                      </div>
                       <div className="flex justify-end mt-2">
                         <Badge
                           className={cn(
@@ -348,6 +430,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                       <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">Total</TableHead>
                       <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">Paid</TableHead>
                       <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">Pending</TableHead>
+                      <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">Expenses</TableHead>
                       <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -380,6 +463,12 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                           <div className="flex items-center">
                             <IndianRupee size={14} className="text-gray-600" />
                             {order.pending_payment}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <IndianRupee size={14} className="text-gray-600" />
+                            {calculateTotalExpenses(order.id)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -435,6 +524,8 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
           )}
         </CardContent>
       </Card>
+
+      {/* Order Details Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 sm:p-6 animate-fade-in">
           <Card className="w-full max-w-lg sm:max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
@@ -450,7 +541,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                   {isEditing ? "Cancel Edit" : "Edit Order"}
                 </Button>
               </div>
-              
+
               <div className="space-y-4 text-sm sm:text-base text-gray-700">
                 {isEditing ? (
                   <>
@@ -467,7 +558,11 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                       <div className="relative mt-1">
                         <Input
                           type="datetime-local"
-                          value={editedOrder.created_at ? new Date(editedOrder.created_at).toISOString().slice(0,16) : ""}
+                          value={
+                            editedOrder.created_at
+                              ? new Date(editedOrder.created_at).toISOString().slice(0, 16)
+                              : ""
+                          }
                           onChange={(e) => handleInputChange("created_at", e.target.value)}
                           className="w-full border-gray-300 rounded-lg shadow-sm"
                         />
@@ -586,15 +681,51 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                       <IndianRupee size={16} className="mx-2" />
                       <span>{selectedOrder.pending_payment}</span>
                     </div>
+                    <div className="flex items-center">
+                      <strong>Total Expenses:</strong>
+                      <IndianRupee size={16} className="mx-2" />
+                      <span>{calculateTotalExpenses(selectedOrder.id)}</span>
+                    </div>
                     <p><strong>Products:</strong></p>
                     <ul className="list-disc pl-6 space-y-2">
                       {selectedOrder.products.map((product, index) => (
                         <li key={index}>
                           <strong>Name:</strong> {product.product_name}, <strong>Qty:</strong> {product.quantity},{" "}
-                          <strong>Price:</strong> <IndianRupee size={14} className="inline" />{product.product_price}
+                          <strong>Price:</strong> <IndianRupee size={14} className="inline" />
+                          {product.product_price}
                         </li>
                       ))}
                     </ul>
+
+                    {/* Expenses Section */}
+                    {getOrderExpenses(selectedOrder.id).length > 0 && (
+                      <>
+                        <p className="font-semibold mt-4">Expenses:</p>
+                        <div className="mt-2 p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">
+                          <div className="max-h-64 overflow-y-auto">
+                            <ul className="list-disc pl-6 space-y-3">
+                              {getOrderExpenses(selectedOrder.id).map((expense, expIndex) =>
+                                expense.expenses.map((item, itemIndex) => (
+                                  <li
+                                    key={`${expIndex}-${itemIndex}`}
+                                    className="bg-white p-3 rounded-md shadow-sm"
+                                  >
+                                    <div><strong>Type:</strong> {item.type || "N/A"}</div>
+                                    <div>
+                                      <strong>Amount:</strong> <IndianRupee size={14} className="inline" />
+                                      <span>{parseFloat(item.amount || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div>
+                                      <strong>Date:</strong> {formatDate(expense.expense_date) || "N/A"}
+                                    </div>
+                                  </li>
+                                ))
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -605,7 +736,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {  // Added
                       onClick={togglePaymentLogs}
                       className="mt-6 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md"
                     >
-                      {showPaymentLogs ? "Hide Payment Logs" : `See Payment Logs (${selectedOrder.payment_logs.length})`}
+                      {showPaymentLogs
+                        ? "Hide Payment Logs"
+                        : `See Payment Logs (${selectedOrder.payment_logs.length})`}
                     </Button>
                     {showPaymentLogs && (
                       <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner border border-gray-200">

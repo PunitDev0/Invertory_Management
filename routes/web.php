@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductNameController;
@@ -113,5 +114,11 @@ Route::prefix('orders')->group(function () {
 Route::prefix('support')->group(function () {
     Route::get('/support-requests', [SupportRequestController::class, 'index']);
     Route::put('/support-requests/{id}/status', [SupportRequestController::class, 'updateStatus']);
+});
+
+Route::prefix('expenses')->group(function () {
+    Route::post('/', [ExpenseController::class, 'store']);
+    Route::get('/', [ExpenseController::class, 'index']);
+    Route::get('/{id}', [ExpenseController::class, 'show']);
 });
 
