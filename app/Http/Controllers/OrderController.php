@@ -26,7 +26,11 @@ class OrderController extends Controller
                 'created_at',
                 'updated_at',
                 'delivered_date',
-                'status'
+                'status',
+                'pickup_time',
+                'billing_number',
+                'shipping_address',
+                
             )
             ->with('paymentLogs') // Eager load the related OrderpaymentLogs
             ->orderBy('created_at', 'desc')
@@ -60,6 +64,9 @@ class OrderController extends Controller
                 'total_amount' => 'required|numeric|min:0',
                 'paid_payment' => 'required|numeric|min:0',
                 'pending_payment' => 'required|numeric|min:0',
+                'billing_number' => 'required|numeric|min:0',
+                'pickup_time' => 'required',
+                'shipping_address' => 'required|string|max:255',
             ]);
 
             if ($validator->fails()) {
@@ -81,6 +88,9 @@ class OrderController extends Controller
             $order->total_amount = $request->total_amount;
             $order->paid_payment = $request->paid_payment;
             $order->pending_payment = $request->pending_payment;
+            $order->billing_number = $request->billing_number;
+            $order->pickup_time = $request->pickup_time;
+            $order->shipping_address = $request->shipping_address;
             $order->updated_at = now();
 
             // Validate payment amounts

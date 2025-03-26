@@ -93,7 +93,16 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
   };
 
   const handleInputChange = (field, value) => {
-    setEditedOrder((prev) => ({ ...prev, [field]: value }));
+    setEditedOrder((prev) => {
+      const updatedOrder = { ...prev, [field]: value };
+      // Recalculate pending_payment when total_amount or paid_payment changes
+      if (field === "total_amount" || field === "paid_payment") {
+        const total = parseFloat(updatedOrder.total_amount) || 0;
+        const paid = parseFloat(updatedOrder.paid_payment) || 0;
+        updatedOrder.pending_payment = (total - paid).toFixed(2);
+      }
+      return updatedOrder;
+    });
   };
 
   const handleSaveChanges = async () => {
@@ -104,8 +113,11 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         user_address: editedOrder.user_address,
         user_city: editedOrder.user_city,
         user_zip: editedOrder.user_zip,
+        billing_number: editedOrder.billing_number, // Added billing_number
         created_at: editedOrder.created_at,
+        shipping_address: editedOrder.shipping_address,
         delivered_date: editedOrder.delivered_date || null,
+        pickup_time: editedOrder.pickup_time || null, // Added pickup_time
         total_amount: parseFloat(editedOrder.total_amount),
         paid_payment: parseFloat(editedOrder.paid_payment),
         pending_payment: parseFloat(editedOrder.pending_payment),
@@ -550,6 +562,14 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                       <Input value={editedOrder.id} disabled className="mt-1" />
                     </div>
                     <div>
+                      <Label>Billing Number:</Label>
+                      <Input
+                        value={editedOrder.billing_number || ""}
+                        onChange={(e) => handleInputChange("billing_number", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
                       <Label>User Name:</Label>
                       <Input value={editedOrder.user_name} disabled className="mt-1" />
                     </div>
@@ -610,6 +630,14 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                       />
                     </div>
                     <div>
+                      <Label>User Zip:</Label>
+                      <Input
+                        value={editedOrder.shipping_address}
+                        onChange={(e) => handleInputChange("shipping_address", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
                       <Label>Delivered Date:</Label>
                       <Input
                         type="date"
@@ -618,10 +646,20 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                         className="mt-1"
                       />
                     </div>
+                    {/* <div>
+                      <Label>Pickup Date:</Label>
+                      <Input
+                        type="date"
+                        value={editedOrder.pickup_time?.split("T")[0] || ""}
+                        onChange={(e) => handleInputChange("pickup_time", e.target.value)}
+                        className="mt-1"
+                      />
+                    </div> */}
                     <div>
                       <Label>Total Amount:</Label>
                       <Input
                         type="number"
+                        step="0.01"
                         value={editedOrder.total_amount}
                         onChange={(e) => handleInputChange("total_amount", e.target.value)}
                         className="mt-1"
@@ -631,6 +669,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                       <Label>Paid Payment:</Label>
                       <Input
                         type="number"
+                        step="0.01"
                         value={editedOrder.paid_payment}
                         onChange={(e) => handleInputChange("paid_payment", e.target.value)}
                         className="mt-1"
@@ -640,15 +679,17 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                       <Label>Pending Payment:</Label>
                       <Input
                         type="number"
+                        step="0.01"
                         value={editedOrder.pending_payment}
-                        onChange={(e) => handleInputChange("pending_payment", e.target.value)}
-                        className="mt-1"
+                        disabled
+                        className="mt-1 bg-gray-100 cursor-not-allowed"
                       />
                     </div>
                   </>
                 ) : (
                   <>
-                    <p><strong>ID:</strong> {selectedOrder.id}</p>
+                    <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+                    <p><strong>Billing No:</strong> {selectedOrder.billing_number}</p>
                     <p><strong>User Name:</strong> {selectedOrder.user_name}</p>
                     <p>
                       <strong>Order Date:</strong> {formatDate(selectedOrder.created_at)}{" "}
@@ -659,24 +700,28 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     <p><strong>User Address:</strong> {selectedOrder.user_address}</p>
                     <p><strong>User City:</strong> {selectedOrder.user_city}</p>
                     <p><strong>User Zip:</strong> {selectedOrder.user_zip}</p>
+                    <p className="text-cyan-700"><strong>Shipping Add:</strong> {selectedOrder.shipping_address}</p>
                     <p>
-                      <strong>Delivered Date:</strong> {formatDate(selectedOrder.delivered_date) || "N/A"}
+                      <strong>Delivered Date:</strong> {selectedOrder.delivered_date}
+                    </p>
+                    <p>
+                      <strong>Pickup Date:</strong> {selectedOrder.pickup_time || "N/A"}
                     </p>
                     <p>
                       <strong>Updated At:</strong> {formatDate(selectedOrder.updated_at)}{" "}
                       {formatTime(selectedOrder.updated_at)}
                     </p>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-yellow-600 font-bold">
                       <strong>Total Amount:</strong>
                       <IndianRupee size={16} className="mx-2" />
                       <span>{selectedOrder.total_amount}</span>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-green-400 font-bold">
                       <strong>Paid Payment:</strong>
                       <IndianRupee size={16} className="mx-2" />
                       <span>{selectedOrder.paid_payment}</span>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center text-red-400 font-bold">
                       <strong>Pending Payment:</strong>
                       <IndianRupee size={16} className="mx-2" />
                       <span>{selectedOrder.pending_payment}</span>

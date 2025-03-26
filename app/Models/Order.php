@@ -25,7 +25,11 @@ class Order extends Model
         'total_amount',
         'paid_payment',
         'pending_payment',
-        'updated_at'
+        'updated_at',
+        'pickup_time',
+        'billing_number',
+        'shipping_address',
+        
     ];
 
     // Cast the 'products' field to an array
