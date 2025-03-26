@@ -630,7 +630,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                       />
                     </div>
                     <div>
-                      <Label>User Zip:</Label>
+                      <Label>Shipping Address:</Label>
                       <Input
                         value={editedOrder.shipping_address}
                         onChange={(e) => handleInputChange("shipping_address", e.target.value)}
