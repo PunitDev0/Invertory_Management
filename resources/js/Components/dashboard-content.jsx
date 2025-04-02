@@ -114,6 +114,12 @@ export function DashboardContent({
   );
   const paidOrderCount = filteredOrders.filter((order) => parseFloat(order.paid_payment || 0) > 0).length;
 
+  // Total pending amount
+  const totalPendingAmount = filteredOrders.reduce(
+    (acc, order) => acc + (parseFloat(order.total_amount || 0) - parseFloat(order.paid_payment || 0)),
+    0
+  );
+
   // Total expenses
   const totalExpenses = filteredExpenses.reduce((acc, expense) => {
     const expenseSum = expense.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
@@ -174,6 +180,10 @@ export function DashboardContent({
     (acc, order) => acc + parseFloat(order.paid_payment || 0),
     0
   );
+  const previousPendingAmount = previousOrders.reduce(
+    (acc, order) => acc + (parseFloat(order.total_amount || 0) - parseFloat(order.paid_payment || 0)),
+    0
+  );
   const previousExpensesTotal = previousExpenses.reduce((acc, expense) => {
     const expenseSum = expense.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
     return acc + expenseSum;
@@ -194,6 +204,7 @@ export function DashboardContent({
     ? calculateChange(totalSuccessfulPaymentAmount, previousSuccessfulPaymentAmount)
     : 0;
   const paidAmountChange = startDate && endDate ? calculateChange(totalPaidAmount, previousPaidAmount) : 0;
+  const pendingAmountChange = startDate && endDate ? calculateChange(totalPendingAmount, previousPendingAmount) : 0;
   const expenseChange = startDate && endDate ? calculateChange(totalExpenses, previousExpensesTotal) : 0;
   const netAmountChange = startDate && endDate ? calculateChange(netAmount, previousNetAmount) : 0;
 
@@ -230,6 +241,7 @@ export function DashboardContent({
         totalAmount: 0,
         successfulPayments: 0,
         paidAmount: 0,
+        pendingAmount: 0,
         expenses: 0,
         netAmount: 0,
       });
@@ -246,6 +258,7 @@ export function DashboardContent({
           data.successfulPayments += parseFloat(order.paid_payment || 0);
         }
         data.paidAmount += parseFloat(order.paid_payment || 0);
+        data.pendingAmount += parseFloat(order.total_amount || 0) - parseFloat(order.paid_payment || 0);
       }
     });
 
@@ -360,7 +373,7 @@ export function DashboardContent({
         </div>
 
         {/* Metric Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -370,7 +383,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{totalOrders}</div>
               </div>
-              
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -404,7 +416,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{filteredProducts.length}</div>
               </div>
-             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -438,7 +449,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{filteredUsers.length}</div>
               </div>
-             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -472,7 +482,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{formatCurrency(totalOrderAmount)}</div>
               </div>
-             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -501,13 +510,45 @@ export function DashboardContent({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2 text-gray-600">
+                  <FaRupeeSign className="text-orange-600" />
+                  <span className="font-medium">Pending Amount</span>
+                </div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(totalPendingAmount)}</div>
+              </div>
+            </div>
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData}>
+                  <defs>
+                    <linearGradient id="colorPendingAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    dataKey="pendingAmount"
+                    stroke="#f97316"
+                    strokeWidth={2}
+                    fill="url(#colorPendingAmount)"
+                    dot={false}
+                  />
+                  <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600">
                   <FaRupeeSign className="text-green-600" />
                   <span className="font-medium">Successful Payments</span>
                 </div>
                 <div className="text-3xl font-bold mt-2">{formatCurrency(totalSuccessfulPaymentAmount)}</div>
                 <div className="text-sm text-gray-500 mt-1">Count: {successfulPaymentCount}</div>
               </div>
-              
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -542,7 +583,6 @@ export function DashboardContent({
                 <div className="text-3xl font-bold mt-2">{formatCurrency(totalPaidAmount)}</div>
                 <div className="text-sm text-gray-500 mt-1">Count: {paidOrderCount}</div>
               </div>
-              
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -576,7 +616,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{formatCurrency(totalExpenses)}</div>
               </div>
-             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -610,7 +649,6 @@ export function DashboardContent({
                 </div>
                 <div className="text-3xl font-bold mt-2">{formatCurrency(netAmount)}</div>
               </div>
-              
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
@@ -654,6 +692,10 @@ export function DashboardContent({
                     <linearGradient id="colorTotalAmount2" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPendingAmount2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorPaidAmount2" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
@@ -700,6 +742,15 @@ export function DashboardContent({
                     stroke="#4f46e5"
                     strokeWidth={2}
                     fill="url(#colorTotalAmount2)"
+                  />
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="pendingAmount"
+                    name="Pending Amount"
+                    stroke="#f97316"
+                    strokeWidth={2}
+                    fill="url(#colorPendingAmount2)"
                   />
                   <Area
                     yAxisId="right"
