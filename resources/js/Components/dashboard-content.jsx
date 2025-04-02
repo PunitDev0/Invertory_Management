@@ -1,6 +1,30 @@
 import { Card } from "@/components/ui/card";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, PieChart as RechartsPieChart, Pie, Cell, AreaChart, Area } from "recharts";
-import { FaShoppingCart, FaBox, FaUsers, FaRupeeSign, FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+} from "recharts";
+import {
+  FaShoppingCart,
+  FaBox,
+  FaUsers,
+  FaRupeeSign,
+  FaChartLine,
+  FaCalendarAlt,
+  FaArrowUp,
+  FaArrowDown,
+} from "react-icons/fa";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
@@ -19,9 +43,15 @@ import {
 } from "@/components/ui/table";
 
 // Define the COLORS array for pie charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
-export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = [], activities = [] }) {
+export function DashboardContent({
+  GetAllProducts = [],
+  orders = [],
+  AllUsers = [],
+  activities = [],
+  Expenses = [],
+}) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [topProducts, setTopProducts] = useState([]);
@@ -33,30 +63,67 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
 
   // Filter data: show all if no date range is set
   const filteredOrders = startDate || endDate
-    ? orders.filter(order => {
+    ? orders.filter((order) => {
         const orderDate = new Date(order.updated_at);
         return (!startDateObj || orderDate >= startDateObj) && (!endDateObj || orderDate <= endDateObj);
       })
     : orders;
 
   const filteredProducts = startDate || endDate
-    ? GetAllProducts.filter(product => {
+    ? GetAllProducts.filter((product) => {
         const productDate = new Date(product.updated_at);
         return (!startDateObj || productDate >= startDateObj) && (!endDateObj || productDate <= endDateObj);
       })
     : GetAllProducts;
 
   const filteredUsers = startDate || endDate
-    ? AllUsers.filter(user => {
+    ? AllUsers.filter((user) => {
         const userDate = new Date(user.created_at);
         return (!startDateObj || userDate >= startDateObj) && (!endDateObj || userDate <= endDateObj);
       })
     : AllUsers;
 
-  // Calculate total revenue from filtered orders
-  const totalRevenue = filteredOrders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
+  const filteredExpenses = startDate || endDate
+    ? Expenses.filter((expense) => {
+        const expenseDate = new Date(expense.expense_date);
+        return (!startDateObj || expenseDate >= startDateObj) && (!endDateObj || expenseDate <= endDateObj);
+      })
+    : Expenses;
 
-  // Previous period for comparison (only when date range is set)
+  // Calculate metrics
+  const totalOrders = filteredOrders.length;
+  const totalOrderAmount = filteredOrders.reduce(
+    (acc, order) => acc + parseFloat(order.total_amount || 0),
+    0
+  );
+
+  // Successful payments: where paid_payment >= total_amount
+  const successfulPayments = filteredOrders.filter(
+    (order) => parseFloat(order.paid_payment || 0) >= parseFloat(order.total_amount || 0)
+  );
+  const totalSuccessfulPaymentAmount = successfulPayments.reduce(
+    (acc, order) => acc + parseFloat(order.paid_payment || 0),
+    0
+  );
+  const successfulPaymentCount = successfulPayments.length;
+
+  // Total paid amount: all payments made
+  const totalPaidAmount = filteredOrders.reduce(
+    (acc, order) => acc + parseFloat(order.paid_payment || 0),
+    0
+  );
+  const paidOrderCount = filteredOrders.filter((order) => parseFloat(order.paid_payment || 0) > 0).length;
+
+  // Total expenses
+  const totalExpenses = filteredExpenses.reduce((acc, expense) => {
+    const expenseSum = expense.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+    return acc + expenseSum;
+  }, 0);
+
+  // Net amount: total paid amount minus total expenses
+  const netAmount = totalPaidAmount - totalExpenses;
+
+  // Previous period for comparison
   const getPreviousRange = () => {
     if (!startDateObj || !endDateObj) return { prevStart: null, prevEnd: null };
     const duration = endDateObj - startDateObj;
@@ -68,95 +135,132 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
   const { prevStart, prevEnd } = getPreviousRange();
 
   const previousOrders = prevStart && prevEnd
-    ? orders.filter(order => {
+    ? orders.filter((order) => {
         const orderDate = new Date(order.updated_at);
         return orderDate >= prevStart && orderDate <= prevEnd;
       })
     : [];
-
   const previousProducts = prevStart && prevEnd
-    ? GetAllProducts.filter(product => {
+    ? GetAllProducts.filter((product) => {
         const productDate = new Date(product.updated_at);
         return productDate >= prevStart && productDate <= prevEnd;
       })
     : [];
-
   const previousUsers = prevStart && prevEnd
-    ? AllUsers.filter(user => {
+    ? AllUsers.filter((user) => {
         const userDate = new Date(user.created_at);
         return userDate >= prevStart && userDate <= prevEnd;
       })
     : [];
+  const previousExpenses = prevStart && prevEnd
+    ? Expenses.filter((expense) => {
+        const expenseDate = new Date(expense.expense_date);
+        return expenseDate >= prevStart && expenseDate <= prevEnd;
+      })
+    : [];
 
-  const previousRevenue = previousOrders.reduce((acc, order) => acc + parseFloat(order.paid_payment || 0), 0);
+  const previousOrderAmount = previousOrders.reduce(
+    (acc, order) => acc + parseFloat(order.total_amount || 0),
+    0
+  );
+  const previousSuccessfulPayments = previousOrders.filter(
+    (order) => parseFloat(order.paid_payment || 0) >= parseFloat(order.total_amount || 0)
+  );
+  const previousSuccessfulPaymentAmount = previousSuccessfulPayments.reduce(
+    (acc, order) => acc + parseFloat(order.paid_payment || 0),
+    0
+  );
+  const previousPaidAmount = previousOrders.reduce(
+    (acc, order) => acc + parseFloat(order.paid_payment || 0),
+    0
+  );
+  const previousExpensesTotal = previousExpenses.reduce((acc, expense) => {
+    const expenseSum = expense.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+    return acc + expenseSum;
+  }, 0);
+  const previousNetAmount = previousPaidAmount - previousExpensesTotal;
 
-  // Calculate percentage changes (0 if no range is set)
+  // Calculate percentage changes
   const calculateChange = (current, previous) => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   };
 
-  const orderChange = startDate && endDate ? calculateChange(filteredOrders.length, previousOrders.length) : 0;
+  const orderChange = startDate && endDate ? calculateChange(totalOrders, previousOrders.length) : 0;
   const productChange = startDate && endDate ? calculateChange(filteredProducts.length, previousProducts.length) : 0;
   const userChange = startDate && endDate ? calculateChange(filteredUsers.length, previousUsers.length) : 0;
-  const revenueChange = startDate && endDate ? calculateChange(totalRevenue, previousRevenue) : 0;
+  const orderAmountChange = startDate && endDate ? calculateChange(totalOrderAmount, previousOrderAmount) : 0;
+  const successfulPaymentChange = startDate && endDate
+    ? calculateChange(totalSuccessfulPaymentAmount, previousSuccessfulPaymentAmount)
+    : 0;
+  const paidAmountChange = startDate && endDate ? calculateChange(totalPaidAmount, previousPaidAmount) : 0;
+  const expenseChange = startDate && endDate ? calculateChange(totalExpenses, previousExpensesTotal) : 0;
+  const netAmountChange = startDate && endDate ? calculateChange(netAmount, previousNetAmount) : 0;
 
-  // Prepare time series data (full range initially)
+  // Prepare time series data
   const prepareTimeSeriesData = () => {
     const dataByDate = new Map();
-
-    // Determine full range or custom range
-    const earliestDate = new Date(Math.min(
-      ...orders.map(o => new Date(o.updated_at).getTime()),
-      ...GetAllProducts.map(p => new Date(p.updated_at).getTime()),
-      ...AllUsers.map(u => new Date(u.created_at).getTime()),
-      Date.now() // Ensure we have a valid minimum
-    ));
-    const latestDate = new Date(Math.max(
-      ...orders.map(o => new Date(o.updated_at).getTime()),
-      ...GetAllProducts.map(p => new Date(p.updated_at).getTime()),
-      ...AllUsers.map(u => new Date(u.created_at).getTime()),
-      Date.now() // Ensure we have a valid maximum
-    ));
+    const earliestDate = new Date(
+      Math.min(
+        ...orders.map((o) => new Date(o.updated_at).getTime()),
+        ...GetAllProducts.map((p) => new Date(p.updated_at).getTime()),
+        ...AllUsers.map((u) => new Date(u.created_at).getTime()),
+        ...Expenses.map((e) => new Date(e.expense_date).getTime()),
+        Date.now()
+      )
+    );
+    const latestDate = new Date(
+      Math.max(
+        ...orders.map((o) => new Date(o.updated_at).getTime()),
+        ...GetAllProducts.map((p) => new Date(p.updated_at).getTime()),
+        ...AllUsers.map((u) => new Date(u.created_at).getTime()),
+        ...Expenses.map((e) => new Date(e.expense_date).getTime()),
+        Date.now()
+      )
+    );
 
     let currentDate = startDateObj || earliestDate;
     const end = endDateObj || latestDate;
 
     while (currentDate <= end) {
-      const dateKey = currentDate.toISOString().split('T')[0];
+      const dateKey = currentDate.toISOString().split("T")[0];
       dataByDate.set(dateKey, {
         name: dateKey,
         orders: 0,
-        revenue: 0,
-        users: 0,
-        products: 0,
+        totalAmount: 0,
+        successfulPayments: 0,
+        paidAmount: 0,
+        expenses: 0,
+        netAmount: 0,
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Populate with all data initially, filtered data when range is set
-    filteredOrders.forEach(order => {
-      const date = new Date(order.updated_at).toISOString().split('T')[0];
+    filteredOrders.forEach((order) => {
+      const date = new Date(order.updated_at).toISOString().split("T")[0];
       if (dataByDate.has(date)) {
         const data = dataByDate.get(date);
         data.orders += 1;
-        data.revenue += parseFloat(order.paid_payment || 0);
+        data.totalAmount += parseFloat(order.total_amount || 0);
+        if (parseFloat(order.paid_payment || 0) >= parseFloat(order.total_amount || 0)) {
+          data.successfulPayments += parseFloat(order.paid_payment || 0);
+        }
+        data.paidAmount += parseFloat(order.paid_payment || 0);
       }
     });
 
-    filteredUsers.forEach(user => {
-      const date = new Date(user.created_at).toISOString().split('T')[0];
+    filteredExpenses.forEach((expense) => {
+      const date = new Date(expense.expense_date).toISOString().split("T")[0];
       if (dataByDate.has(date)) {
-        dataByDate.get(date).users += 1;
+        const expenseSum = expense.expenses.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+        dataByDate.get(date).expenses += expenseSum;
       }
     });
 
-    filteredProducts.forEach(product => {
-      const date = new Date(product.updated_at).toISOString().split('T')[0];
-      if (dataByDate.has(date)) {
-        dataByDate.get(date).products += 1;
-      }
-    });
+    // Calculate net amount per day
+    for (const [date, data] of dataByDate) {
+      data.netAmount = data.paidAmount - data.expenses;
+    }
 
     return Array.from(dataByDate.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
@@ -165,12 +269,12 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
 
   // Group users by role
   const usersByRole = filteredUsers.reduce((acc, user) => {
-    const role = user.role || 'unknown';
+    const role = user.role || "unknown";
     acc[role] = (acc[role] || 0) + 1;
     return acc;
   }, {});
 
-  const roleData = Object.keys(usersByRole).map(role => ({
+  const roleData = Object.keys(usersByRole).map((role) => ({
     name: role,
     value: usersByRole[role],
   }));
@@ -178,25 +282,24 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
   // Find top products and recent orders
   useEffect(() => {
     const productOrderCount = {};
-    filteredOrders.forEach(order => {
+    filteredOrders.forEach((order) => {
       const productId = order.product_id;
       if (productId) {
         productOrderCount[productId] = (productOrderCount[productId] || 0) + 1;
       }
     });
 
-    const productsWithCount = GetAllProducts
-      .map(product => ({
-        ...product,
-        orderCount: productOrderCount[product.id] || 0,
-        revenue: (productOrderCount[product.id] || 0) * parseFloat(product.price || 0),
-      }))
+    const productsWithCount = GetAllProducts.map((product) => ({
+      ...product,
+      orderCount: productOrderCount[product.id] || 0,
+      revenue: (productOrderCount[product.id] || 0) * parseFloat(product.price || 0),
+    }))
       .sort((a, b) => b.orderCount - a.orderCount)
       .slice(0, 5);
 
     setTopProducts(productsWithCount);
 
-    const recent = [...filteredOrders] // Always show latest from filtered orders
+    const recent = [...filteredOrders]
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       .slice(0, 5);
     setRecentOrders(recent);
@@ -204,9 +307,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -257,7 +360,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
         </div>
 
         {/* Metric Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
           <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -265,20 +368,17 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <FaShoppingCart className="text-blue-600" />
                   <span className="font-medium">Total Orders</span>
                 </div>
-                <div className="text-3xl font-bold mt-2">{filteredOrders.length}</div>
+                <div className="text-3xl font-bold mt-2">{totalOrders}</div>
               </div>
-              <Badge className={orderChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {orderChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                {Math.abs(orderChange).toFixed(1)}%
-              </Badge>
+              
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
                   <defs>
                     <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0070f3" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#0070f3" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#0070f3" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#0070f3" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
@@ -304,18 +404,15 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 </div>
                 <div className="text-3xl font-bold mt-2">{filteredProducts.length}</div>
               </div>
-              <Badge className={productChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {productChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                {Math.abs(productChange).toFixed(1)}%
-              </Badge>
+             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
                   <defs>
                     <linearGradient id="colorProducts" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
@@ -337,22 +434,19 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
               <div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <FaUsers className="text-purple-600" />
-                  <span className="font-medium">Unique Customers</span>
+                  <span className="font-medium">Total Users</span>
                 </div>
                 <div className="text-3xl font-bold mt-2">{filteredUsers.length}</div>
               </div>
-              <Badge className={userChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {userChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                {Math.abs(userChange).toFixed(1)}%
-              </Badge>
+             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
@@ -373,31 +467,166 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2 text-gray-600">
-                  <FaRupeeSign className="text-green-600" />
-                  <span className="font-medium">Total Revenue</span>
+                  <FaRupeeSign className="text-indigo-600" />
+                  <span className="font-medium">Total Order Amount</span>
                 </div>
-                <div className="text-3xl font-bold mt-2">{formatCurrency(totalRevenue)}</div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(totalOrderAmount)}</div>
               </div>
-              <Badge className={revenueChange >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {revenueChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                {Math.abs(revenueChange).toFixed(1)}%
-              </Badge>
+             
             </div>
             <div className="h-16">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
                   <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <linearGradient id="colorTotalAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
                     type="monotone"
-                    dataKey="revenue"
+                    dataKey="totalAmount"
+                    stroke="#4f46e5"
+                    strokeWidth={2}
+                    fill="url(#colorTotalAmount)"
+                    dot={false}
+                  />
+                  <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaRupeeSign className="text-green-600" />
+                  <span className="font-medium">Successful Payments</span>
+                </div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(totalSuccessfulPaymentAmount)}</div>
+                <div className="text-sm text-gray-500 mt-1">Count: {successfulPaymentCount}</div>
+              </div>
+              
+            </div>
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData}>
+                  <defs>
+                    <linearGradient id="colorSuccessfulPayments" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    dataKey="successfulPayments"
                     stroke="#10b981"
                     strokeWidth={2}
-                    fill="url(#colorRevenue)"
+                    fill="url(#colorSuccessfulPayments)"
+                    dot={false}
+                  />
+                  <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaRupeeSign className="text-teal-600" />
+                  <span className="font-medium">Total Paid Amount</span>
+                </div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(totalPaidAmount)}</div>
+                <div className="text-sm text-gray-500 mt-1">Count: {paidOrderCount}</div>
+              </div>
+              
+            </div>
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData}>
+                  <defs>
+                    <linearGradient id="colorPaidAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    dataKey="paidAmount"
+                    stroke="#14b8a6"
+                    strokeWidth={2}
+                    fill="url(#colorPaidAmount)"
+                    dot={false}
+                  />
+                  <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaRupeeSign className="text-red-600" />
+                  <span className="font-medium">Total Expenses</span>
+                </div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(totalExpenses)}</div>
+              </div>
+             
+            </div>
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData}>
+                  <defs>
+                    <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    fill="url(#colorExpenses)"
+                    dot={false}
+                  />
+                  <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 transition-all hover:shadow-lg hover:scale-[1.02]">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <FaRupeeSign className="text-cyan-600" />
+                  <span className="font-medium">Net Amount</span>
+                </div>
+                <div className="text-3xl font-bold mt-2">{formatCurrency(netAmount)}</div>
+              </div>
+              
+            </div>
+            <div className="h-16">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData}>
+                  <defs>
+                    <linearGradient id="colorNetAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    dataKey="netAmount"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    fill="url(#colorNetAmount)"
                     dot={false}
                   />
                   <Tooltip labelFormatter={(value) => `Date: ${value}`} formatter={(value) => formatCurrency(value)} />
@@ -418,19 +647,27 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData} margin={{ top: 10, right: 30, left: 0, bottom: 30 }}>
                   <defs>
-                    <linearGradient id="colorRevenue2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
                     <linearGradient id="colorOrders2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0070f3" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#0070f3" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#0070f3" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#0070f3" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorTotalAmount2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPaidAmount2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorExpenses2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="name"
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => value.split('-').slice(1).join('-')} // Show MM-DD
+                    tickFormatter={(value) => value.split("-").slice(1).join("-")}
                   />
                   <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} />
                   <YAxis
@@ -441,7 +678,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   />
                   <Tooltip
                     formatter={(value, name) => {
-                      if (name === 'revenue') return formatCurrency(value);
+                      if (name !== "orders") return formatCurrency(value);
                       return value;
                     }}
                   />
@@ -458,11 +695,29 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <Area
                     yAxisId="right"
                     type="monotone"
-                    dataKey="revenue"
-                    name="Revenue"
-                    stroke="#10b981"
+                    dataKey="totalAmount"
+                    name="Total Amount"
+                    stroke="#4f46e5"
                     strokeWidth={2}
-                    fill="url(#colorRevenue2)"
+                    fill="url(#colorTotalAmount2)"
+                  />
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="paidAmount"
+                    name="Paid Amount"
+                    stroke="#14b8a6"
+                    strokeWidth={2}
+                    fill="url(#colorPaidAmount2)"
+                  />
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="expenses"
+                    name="Expenses"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    fill="url(#colorExpenses2)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -519,7 +774,9 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <TableBody>
                   {topProducts.map((product) => (
                     <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.productName || product.title || 'Unknown'}</TableCell>
+                      <TableCell className="font-medium">
+                        {product.productName || product.title || "Unknown"}
+                      </TableCell>
                       <TableCell className="text-right">{formatCurrency(product.price || 0)}</TableCell>
                     </TableRow>
                   ))}
@@ -548,31 +805,41 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                   <TableRow>
                     <TableHead>Order ID</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead className="text-right">Pending_Amount</TableHead>
-                    <TableHead className="text-right">Paid_Amount</TableHead>
-                    <TableHead className="text-right">Total_Amount</TableHead>
+                    <TableHead className="text-right">Pending</TableHead>
+                    <TableHead className="text-right">Paid</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentOrders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">#{order.id || 'N/A'}</TableCell>
-                      <TableCell>{order.customer_name || order.user_name || 'Unknown'}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(order.pending_payment || 0)}</TableCell>
+                      <TableCell className="font-medium">#{order.id || "N/A"}</TableCell>
+                      <TableCell>{order.customer_name || order.user_name || "Unknown"}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(order.pending_payment || 0)}
+                      </TableCell>
                       <TableCell className="text-right">{formatCurrency(order.paid_payment || 0)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(order.total_amount || 0)}</TableCell>
                       <TableCell className="text-right">
                         <Badge
                           className={
-                            `${order.status === "pending" && 'bg-red-500'}
-                             ${order.status === "paid" && 'bg-green-500'}
-                             ${order.status === "canceled" && 'bg-orange-500'}`
+                            order.status === "pending"
+                              ? "bg-red-500"
+                              : order.status === "paid"
+                              ? "bg-green-500"
+                              : order.status === "canceled"
+                              ? "bg-orange-500"
+                              : "bg-gray-500"
                           }
                         >
-                          {order.status === "pending" && 'Processing'}
-                          {order.status === "paid" && 'Paid'}
-                          {order.status === "canceled" && 'Canceled'}
+                          {order.status === "pending"
+                            ? "Processing"
+                            : order.status === "paid"
+                            ? "Paid"
+                            : order.status === "canceled"
+                            ? "Canceled"
+                            : "Unknown"}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -597,11 +864,16 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                 <h3 className="text-xl font-semibold">Recent Activity</h3>
                 <p className="text-sm text-gray-500">Latest actions in your store</p>
               </div>
-              <Button variant="outline" size="sm">View All Activity</Button>
+              <Button variant="outline" size="sm">
+                View All Activity
+              </Button>
             </div>
             <div className="space-y-4">
               {activities.map((activity, index) => (
-                <div key={activity.id || index} className="flex items-start gap-4 p-4 rounded-lg bg-gray-50">
+                <div
+                  key={activity.id || index}
+                  className="flex items-start gap-4 p-4 rounded-lg bg-gray-50"
+                >
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                     <FaUsers />
                   </div>
@@ -613,7 +885,7 @@ export function DashboardContent({ GetAllProducts = [], orders = [], AllUsers = 
                       </span>
                     </div>
                     <p className="text-gray-600 mt-1">
-                      {activity.user}: {activity.details || 'Performed an action'}
+                      {activity.user}: {activity.details || "Performed an action"}
                     </p>
                   </div>
                 </div>
@@ -639,7 +911,8 @@ function PieChart({ data }) {
           stroke="#E5EDE5"
           strokeWidth="20"
           strokeDasharray={`${data[0].value * 2.51} ${100 * 2.51}`}
-          transform="rotate(-90) translate(-100 0)" />
+          transform="rotate(-90) translate(-100 0)"
+        />
         <circle
           cx="50"
           cy="50"
@@ -649,7 +922,8 @@ function PieChart({ data }) {
           strokeWidth="20"
           strokeDasharray={`${data[1].value * 2.51} ${100 * 2.51}`}
           transform="rotate(-90) translate(-100 0)"
-          strokeDashoffset={`${-data[0].value * 2.51}`} />
+          strokeDashoffset={`${-data[0].value * 2.51}`}
+        />
         <circle
           cx="50"
           cy="50"
@@ -659,7 +933,8 @@ function PieChart({ data }) {
           strokeWidth="20"
           strokeDasharray={`${data[2].value * 2.51} ${100 * 2.51}`}
           transform="rotate(-90) translate(-100 0)"
-          strokeDashoffset={`${-(data[0].value + data[1].value) * 2.51}`} />
+          strokeDashoffset={`${-(data[0].value + data[1].value) * 2.51}`}
+        />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">

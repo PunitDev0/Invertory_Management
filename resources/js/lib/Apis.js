@@ -302,3 +302,12 @@ export const updateSupportRequestStatus = async (id, status) => {
     throw new Error("Failed to update status: " + (error.response?.data?.message || error.message));
   }
 };
+
+export const Expenses = async () => {
+  try {
+    const response = await axios.get(`/expenses`);
+    return response;
+  } catch (error) {
+    throw new Error("Failed to fetch espenses: " + (error.response?.data?.message || error.message));
+  }
+};

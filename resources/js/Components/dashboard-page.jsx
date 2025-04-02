@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
 import { DashboardContent } from "./dashboard-content";
-import { fetchOrders, fetchProducts, fetchUsers } from "@/lib/Apis";
+import { Expenses, fetchOrders, fetchProducts, fetchUsers } from "@/lib/Apis";
 import axios from "axios";
 
 export function DashboardPage({userorders}) {
@@ -71,6 +71,21 @@ export function DashboardPage({userorders}) {
     getUsers();
   }, []);
 
+  const [ExpensesData, setAExpenses] = useState([]);
+  useEffect(() => {
+    const expense = async () => {
+      try {
+        const response = await Expenses();
+        console.log(response.data.data);
+        
+        setAExpenses(response.data.data);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    expense();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F8F8F8]">
       <div className="flex-1 flex">
@@ -79,7 +94,7 @@ export function DashboardPage({userorders}) {
         </aside>
         <main className="flex-1 lg:pl-64">
           <Navbar className="lg:pl-64" setActiveSection={setActiveSection} />
-       <DashboardContent orders={orders} GetAllProducts={GetAllProducts} AllUsers={AllUserData} />        </main>
+       <DashboardContent orders={orders} GetAllProducts={GetAllProducts} AllUsers={AllUserData} Expenses={ExpensesData} />        </main>
       </div>
     </div>
   );

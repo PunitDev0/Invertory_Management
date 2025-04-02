@@ -72,8 +72,20 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
   }, []);
 
   const handleOrderClick = (order) => {
+    const initialEditedOrder = {
+      ...order,
+      created_at_date: order.created_at ? new Date(order.created_at).toISOString().split("T")[0] : "",
+      created_at_time: order.created_at ? new Date(order.created_at).toLocaleTimeString("en-US", { hour12: false }).slice(0, 5) : "12:00",
+      // created_at_period: order.created_at ? (new Date(order.created_at).getHours() >= 12 ? "PM" : "AM") : "AM",
+      delivered_date_date: order.delivered_date ? new Date(order.delivered_date).toISOString().split("T")[0] : "",
+      delivered_date_time: order.delivered_date ? new Date(order.delivered_date).toLocaleTimeString("en-US", { hour12: false }).slice(0, 5) : "12:00",
+      // delivered_date_period: order.delivered_date ? (new Date(order.delivered_date).getHours() >= 12 ? "PM" : "AM") : "AM",
+      pickup_time_date: order.pickup_time ? new Date(order.pickup_time).toISOString().split("T")[0] : "",
+      pickup_time_time: order.pickup_time ? new Date(order.pickup_time).toLocaleTimeString("en-US", { hour12: false }).slice(0, 5) : "12:00",
+      // pickup_time_period: order.pickup_time ? (new Date(order.pickup_time).getHours() >= 12 ? "PM" : "AM") : "AM",
+    };
     setSelectedOrder(order);
-    setEditedOrder({ ...order });
+    setEditedOrder(initialEditedOrder);
     setShowPaymentLogs(false);
     setIsEditing(false);
   };
@@ -92,10 +104,29 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
     setIsEditing(!isEditing);
   };
 
+  const toMySQLTimestamp = (date, time, period) => {
+    if (!date || !time) return null;
+    const [hours, minutes] = time.split(":");
+    let hour = parseInt(hours);
+    const minute = parseInt(minutes);
+
+    if (period === "PM" && hour < 12) {
+      hour += 12;
+    } else if (period === "AM" && hour === 12) {
+      hour = 0;
+    }
+
+    const dateObj = new Date(date);
+    dateObj.setHours(hour, minute, 0, 0);
+
+    return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(
+      dateObj.getDate()
+    ).padStart(2, "0")} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
+  };
+
   const handleInputChange = (field, value) => {
     setEditedOrder((prev) => {
       const updatedOrder = { ...prev, [field]: value };
-      // Recalculate pending_payment when total_amount or paid_payment changes
       if (field === "total_amount" || field === "paid_payment") {
         const total = parseFloat(updatedOrder.total_amount) || 0;
         const paid = parseFloat(updatedOrder.paid_payment) || 0;
@@ -113,15 +144,19 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         user_address: editedOrder.user_address,
         user_city: editedOrder.user_city,
         user_zip: editedOrder.user_zip,
-        billing_number: editedOrder.billing_number, // Added billing_number
-        created_at: editedOrder.created_at,
+        billing_number: editedOrder.billing_number,
+        created_at: toMySQLTimestamp(editedOrder.created_at_date, editedOrder.created_at_time, editedOrder.created_at_period),
         shipping_address: editedOrder.shipping_address,
-        delivered_date: editedOrder.delivered_date || null,
-        pickup_time: editedOrder.pickup_time || null, // Added pickup_time
+        delivered_date: toMySQLTimestamp(editedOrder.delivered_date_date, editedOrder.delivered_date_time, editedOrder.delivered_date_period),
+        pickup_time: toMySQLTimestamp(editedOrder.pickup_time_date, editedOrder.pickup_time_time, editedOrder.pickup_time_period),
         total_amount: parseFloat(editedOrder.total_amount),
         paid_payment: parseFloat(editedOrder.paid_payment),
         pending_payment: parseFloat(editedOrder.pending_payment),
       };
+      if(orderData.delivered_date < orderData.pickup_time) {
+         toast.error("Delivered date cannot be before pickup time");
+        return;
+      }
 
       const response = await UpdateOrders(editedOrder.id, orderData);
 
@@ -132,7 +167,6 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         setSelectedOrder(response.data);
         setIsEditing(false);
         toast.success("Order updated successfully");
-        window.location.reload();
       } else {
         throw new Error(response.message || "Failed to update order");
       }
@@ -159,10 +193,20 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
     });
   };
 
-  const formatTime = (dateString) => {
+  const formatTime24Hour = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("en-GB", { 
+      hour: "2-digit", 
+      minute: "2-digit", 
+      second: "2-digit",
+      hour12: false 
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    return `${formatDate(dateString)} ${formatTime24Hour(dateString)}`;
   };
 
   const calculateTotalExpenses = (orderId) => {
@@ -306,11 +350,11 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                   <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
                   <p className="text-gray-600 text-sm mt-1">User: {order.user_name}</p>
                   <p className="text-gray-600 text-sm mt-1">
-                    Ordered: {formatDate(order.created_at)} {formatTime(order.created_at)}
+                    Ordered: {formatDate(order.created_at)} {formatTime24Hour(order.created_at)}
                   </p>
                   {order.delivered_date && (
                     <p className="text-gray-600 text-sm mt-1">
-                      Delivered: {formatDate(order.delivered_date)}
+                      Delivered: {formatDateTime(order.delivered_date)}
                     </p>
                   )}
                   <div className="mt-3 space-y-2">
@@ -368,7 +412,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
           </h2>
           {filteredOrders.length === 0 ? (
             <div className="text-center text-gray-500 text-lg">No orders found</div>
-          ) : (
+          )
+
+ : (
             <>
               {/* Cards for small screens */}
               <div className="sm:hidden grid grid-cols-1 gap-6">
@@ -381,10 +427,10 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
                     <p className="text-gray-600 text-sm mt-1">User: {order.user_name}</p>
                     <p className="text-gray-600 text-sm mt-1">
-                      Ordered: {formatDate(order.created_at)} {formatTime(order.created_at)}
+                      Ordered: {formatDate(order.created_at)} {formatTime24Hour(order.created_at)}
                     </p>
                     <p className="text-gray-600 text-sm mt-1">
-                      Delivered: {formatDate(order.delivered_date) || "N/A"}
+                      Delivered: {formatDateTime(order.delivered_date) || "N/A"}
                     </p>
                     <div className="mt-3 space-y-2">
                       <div className="flex justify-between items-center text-sm text-gray-700">
@@ -456,9 +502,9 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                         <TableCell className="font-medium">{order.id}</TableCell>
                         <TableCell>{order.user_name}</TableCell>
                         <TableCell>
-                          {formatDate(order.created_at)} {formatTime(order.created_at)}
+                          {formatDate(order.created_at)} {formatTime24Hour(order.created_at)}
                         </TableCell>
-                        <TableCell>{formatDate(order.delivered_date) || "N/A"}</TableCell>
+                        <TableCell>{formatDateTime(order.delivered_date) || "N/A"}</TableCell>
                         <TableCell>
                           <div className="flex items-center">
                             <IndianRupee size={14} className="text-gray-600" />
@@ -575,18 +621,33 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     </div>
                     <div>
                       <Label>Order Date:</Label>
-                      <div className="relative mt-1">
+                      <div className="mt-1 flex flex-col gap-2">
                         <Input
-                          type="datetime-local"
-                          value={
-                            editedOrder.created_at
-                              ? new Date(editedOrder.created_at).toISOString().slice(0, 16)
-                              : ""
-                          }
-                          onChange={(e) => handleInputChange("created_at", e.target.value)}
+                          type="date"
+                          value={editedOrder.created_at_date}
+                          onChange={(e) => handleInputChange("created_at_date", e.target.value)}
                           className="w-full border-gray-300 rounded-lg shadow-sm"
                         />
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <div className="flex gap-2">
+                          <Input
+                            type="time"
+                            value={editedOrder.created_at_time}
+                            onChange={(e) => handleInputChange("created_at_time", e.target.value)}
+                            className="flex-1 border-gray-300 rounded-lg shadow-sm"
+                          />
+                          {/* <Select
+                            value={editedOrder.created_at_period}
+                            onValueChange={(value) => handleInputChange("created_at_period", value)}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AM">AM</SelectItem>
+                              <SelectItem value="PM">PM</SelectItem>
+                            </SelectContent>
+                          </Select> */}
+                        </div>
                       </div>
                     </div>
                     <div>
@@ -639,22 +700,66 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     </div>
                     <div>
                       <Label>Delivered Date:</Label>
-                      <Input
-                        type="date"
-                        value={editedOrder.delivered_date?.split("T")[0] || ""}
-                        onChange={(e) => handleInputChange("delivered_date", e.target.value)}
-                        className="mt-1"
-                      />
+                      <div className="mt-1 flex flex-col gap-2">
+                        <Input
+                          type="date"
+                          value={editedOrder.delivered_date_date}
+                          onChange={(e) => handleInputChange("delivered_date_date", e.target.value)}
+                          className="w-full border-gray-300 rounded-lg shadow-sm"
+                        />
+                        <div className="flex gap-2">
+                          <Input
+                            type="time"
+                            value={editedOrder.delivered_date_time}
+                            onChange={(e) => handleInputChange("delivered_date_time", e.target.value)}
+                            className="flex-1 border-gray-300 rounded-lg shadow-sm"
+                          />
+                          {/* <Select
+                            value={editedOrder.delivered_date_period}
+                            onValueChange={(value) => handleInputChange("delivered_date_period", value)}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AM">AM</SelectItem>
+                              <SelectItem value="PM">PM</SelectItem>
+                            </SelectContent>
+                          </Select> */}
+                        </div>
+                      </div>
                     </div>
-                    {/* <div>
+                    <div>
                       <Label>Pickup Date:</Label>
-                      <Input
-                        type="date"
-                        value={editedOrder.pickup_time?.split("T")[0] || ""}
-                        onChange={(e) => handleInputChange("pickup_time", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div> */}
+                      <div className="mt-1 flex flex-col gap-2">
+                        <Input
+                          type="date"
+                          value={editedOrder.pickup_time_date}
+                          onChange={(e) => handleInputChange("pickup_time_date", e.target.value)}
+                          className="w-full border-gray-300 rounded-lg shadow-sm"
+                        />
+                        <div className="flex gap-2">
+                          <Input
+                            type="time"
+                            value={editedOrder.pickup_time_time}
+                            onChange={(e) => handleInputChange("pickup_time_time", e.target.value)}
+                            className="flex-1 border-gray-300 rounded-lg shadow-sm"
+                          />
+                          {/* <Select
+                            value={editedOrder.pickup_time_period}
+                            onValueChange={(value) => handleInputChange("pickup_time_period", value)}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AM">AM</SelectItem>
+                              <SelectItem value="PM">PM</SelectItem>
+                            </SelectContent>
+                          </Select> */}
+                        </div>
+                      </div>
+                    </div>
                     <div>
                       <Label>Total Amount:</Label>
                       <Input
@@ -693,7 +798,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     <p><strong>User Name:</strong> {selectedOrder.user_name}</p>
                     <p>
                       <strong>Order Date:</strong> {formatDate(selectedOrder.created_at)}{" "}
-                      {formatTime(selectedOrder.created_at)}
+                      {formatTime24Hour(selectedOrder.created_at)}
                     </p>
                     <p><strong>User Email:</strong> {selectedOrder.user_email}</p>
                     <p><strong>User Phone:</strong> {selectedOrder.user_phone}</p>
@@ -702,14 +807,14 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                     <p><strong>User Zip:</strong> {selectedOrder.user_zip}</p>
                     <p className="text-cyan-700"><strong>Shipping Add:</strong> {selectedOrder.shipping_address}</p>
                     <p>
-                      <strong>Delivered Date:</strong> {selectedOrder.delivered_date}
+                      <strong>Delivered Date:</strong> {formatDateTime(selectedOrder.delivered_date)}
                     </p>
                     <p>
-                      <strong>Pickup Date:</strong> {selectedOrder.pickup_time || "N/A"}
+                      <strong>Pickup Date:</strong> {formatDateTime(selectedOrder.pickup_time)}
                     </p>
                     <p>
                       <strong>Updated At:</strong> {formatDate(selectedOrder.updated_at)}{" "}
-                      {formatTime(selectedOrder.updated_at)}
+                      {formatTime24Hour(selectedOrder.updated_at)}
                     </p>
                     <div className="flex items-center text-yellow-600 font-bold">
                       <strong>Total Amount:</strong>
@@ -799,7 +904,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                                 </div>
                                 <div>
                                   <strong>Date:</strong> {formatDate(log.created_at)}{" "}
-                                  {formatTime(log.created_at)}
+                                  {formatTime24Hour(log.created_at)}
                                 </div>
                               </li>
                             ))}
