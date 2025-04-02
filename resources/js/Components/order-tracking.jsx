@@ -153,7 +153,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         paid_payment: parseFloat(editedOrder.paid_payment),
         pending_payment: parseFloat(editedOrder.pending_payment),
       };
-      if(orderData.delivered_date < orderData.pickup_time) {
+      if(orderData.delivered_date > orderData.pickup_time) {
          toast.error("Delivered date cannot be before pickup time");
         return;
       }
