@@ -1,5 +1,5 @@
 import Layout from '@/Components/Layout/Layout';
-import OrderTracking from '@/Components/order-tracking'
+import OrderTracking from '@/Components/OrderTracking/OrderTracking';
 import { fetchOrders } from '@/lib/Apis';
 import React, { useEffect, useState } from 'react'
 
