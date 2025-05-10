@@ -1,4 +1,4 @@
-import{c as a}from"./navbar-Dvh0GS3w.js";/**
+import{c as a}from"./navbar-BAXER-0u.js";/**
  * @license lucide-react v0.474.0 - ISC
  *
  * This source code is licensed under the ISC license.

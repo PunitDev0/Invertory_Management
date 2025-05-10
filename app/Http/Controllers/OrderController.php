@@ -13,6 +13,7 @@ class OrderController extends Controller
         // Fetch all orders along with related order payment logs
         $orders = Order::select(
                 'id',
+                'user_id',
                 'user_name',
                 'user_email',
                 'user_phone',

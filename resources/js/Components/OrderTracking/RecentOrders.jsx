@@ -28,10 +28,10 @@ export default function RecentOrders({
                 onClick={() => onOrderClick(order)}
               >
                 <h3 className="text-lg font-semibold text-gray-800">
-                  Order #{order.id}
+                  Order ARYAN{order.id}
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
-                  User: {order.user_name}
+                  Client: {order.user_name}
                 </p>
                 <p className="text-gray-600 text-sm mt-1">
                   Ordered: {formatDate(order.created_at)}{" "}

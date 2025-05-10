@@ -20,6 +20,7 @@ class Order extends Model
         'user_address',
         'user_city',
         'user_zip',
+        'user_id',
         'created_at',
         'delivered_date',
         'total_amount',

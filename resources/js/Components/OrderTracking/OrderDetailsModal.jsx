@@ -206,7 +206,7 @@ export default function OrderDetailsModal({
                   />
                 </div>
                 <div>
-                  <Label>User Name:</Label>
+                  <Label>Client Name:</Label>
                   <Input
                     value={editedOrder.user_name}
                     disabled
@@ -237,7 +237,7 @@ export default function OrderDetailsModal({
                   </div>
                 </div>
                 <div>
-                  <Label>User Email:</Label>
+                  <Label>Client Email:</Label>
                   <Input
                     value={editedOrder.user_email}
                     onChange={(e) =>
@@ -247,7 +247,7 @@ export default function OrderDetailsModal({
                   />
                 </div>
                 <div>
-                  <Label>User Phone:</Label>
+                  <Label>Client Phone:</Label>
                   <Input
                     value={editedOrder.user_phone}
                     onChange={(e) =>
@@ -257,7 +257,7 @@ export default function OrderDetailsModal({
                   />
                 </div>
                 <div>
-                  <Label>User Address:</Label>
+                  <Label>Client Address:</Label>
                   <Input
                     value={editedOrder.user_address}
                     onChange={(e) =>
@@ -277,7 +277,7 @@ export default function OrderDetailsModal({
                   />
                 </div>
                 <div>
-                  <Label>User Zip:</Label>
+                  <Label>Client Zip:</Label>
                   <Input
                     value={editedOrder.user_zip}
                     onChange={(e) =>
@@ -380,32 +380,35 @@ export default function OrderDetailsModal({
             ) : (
               <>
                 <p>
+                  <strong>User ID:</strong> {order.user_id}
+                </p>
+                <p>
                   <strong>Order ID:</strong> {order.id}
                 </p>
                 <p>
                   <strong>Billing No:</strong> {order.billing_number}
                 </p>
                 <p>
-                  <strong>User Name:</strong> {order.user_name}
+                  <strong>Client Name:</strong> {order.user_name}
                 </p>
                 <p>
                   <strong>Order Date:</strong> {formatDate(order.created_at)}{" "}
                   {formatTime24Hour(order.created_at)}
                 </p>
                 <p>
-                  <strong>User Email:</strong> {order.user_email}
+                  <strong>Client Email:</strong> {order.user_email}
                 </p>
                 <p>
-                  <strong>User Phone:</strong> {order.user_phone}
+                  <strong>Client Phone:</strong> {order.user_phone}
                 </p>
                 <p>
-                  <strong>User Address:</strong> {order.user_address}
+                  <strong>Client Address:</strong> {order.user_address}
                 </p>
                 <p>
-                  <strong>User City:</strong> {order.user_city}
+                  <strong>Client City:</strong> {order.user_city}
                 </p>
                 <p>
-                  <strong>User Zip:</strong> {order.user_zip}
+                  <strong>Client Zip:</strong> {order.user_zip}
                 </p>
                 <p className="text-cyan-700">
                   <strong>Shipping Add:</strong> {order.shipping_address}

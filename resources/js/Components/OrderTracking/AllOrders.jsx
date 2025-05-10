@@ -55,7 +55,7 @@ export default function AllOrders({
                   onClick={() => onOrderClick(order)}
                 >
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Order #{order.id}
+                    Order ARYAN{order.id}
                   </h3>
                   <p className="text-gray-600 text-sm mt-1">
                     User: {order.user_name}
@@ -122,7 +122,10 @@ export default function AllOrders({
                       Order ID
                     </TableHead>
                     <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">
-                      User
+                      User ID
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">
+                      Client
                     </TableHead>
                     <TableHead className="text-xs sm:text-sm font-semibold text-gray-800">
                       Order Date
@@ -154,7 +157,8 @@ export default function AllOrders({
                       className="cursor-pointer hover:bg-gray-50 transition-colors text-xs sm:text-sm border-b"
                       onClick={() => onOrderClick(order)}
                     >
-                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="font-medium">ARYAN{order.id}</TableCell>
+                      <TableCell className="font-medium">{order.user_id}</TableCell>
                       <TableCell>{order.user_name}</TableCell>
                       <TableCell>
                         {formatDate(order.created_at)}{" "}
