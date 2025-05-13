@@ -17,6 +17,10 @@ export default function FilterOrders({
   setStartDate,
   endDate,
   setEndDate,
+  deliveredStartDate, // New prop for delivered start date
+  setDeliveredStartDate, // New prop for setting delivered start date
+  deliveredEndDate, // New prop for delivered end date
+  setDeliveredEndDate, // New prop for setting delivered end date
   statusFilter,
   setStatusFilter,
   searchQuery,
@@ -48,7 +52,7 @@ export default function FilterOrders({
               htmlFor="startDate"
               className="text-sm font-medium text-gray-700"
             >
-              Start Date
+              Ordered Start Date
             </Label>
             <div className="relative mt-1">
               <Input
@@ -66,7 +70,7 @@ export default function FilterOrders({
               htmlFor="endDate"
               className="text-sm font-medium text-gray-700"
             >
-              End Date
+              Ordered End Date
             </Label>
             <div className="relative mt-1">
               <Input
@@ -74,6 +78,42 @@ export default function FilterOrders({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+              />
+              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+          <div>
+            <Label
+              htmlFor="deliveredStartDate"
+              className="text-sm font-medium text-gray-700"
+            >
+              Delivered Start Date
+            </Label>
+            <div className="relative mt-1">
+              <Input
+                id="deliveredStartDate"
+                type="date"
+                value={deliveredStartDate}
+                onChange={(e) => setDeliveredStartDate(e.target.value)}
+                className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+              />
+              <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            </div>
+          </div>
+          <div>
+            <Label
+              htmlFor="deliveredEndDate"
+              className="text-sm font-medium text-gray-700"
+            >
+              Delivered End Date
+            </Label>
+            <div className="relative mt-1">
+              <Input
+                id="deliveredEndDate"
+                type="date"
+                value={deliveredEndDate}
+                onChange={(e) => setDeliveredEndDate(e.target.value)}
                 className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

@@ -19,6 +19,8 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [deliveredStartDate, setDeliveredStartDate] = useState(""); // New state for delivered start date
+  const [deliveredEndDate, setDeliveredEndDate] = useState(""); // New state for delivered end date
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,8 +54,19 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         const start = startDate ? new Date(startDate) : null;
         const end = endDate ? new Date(endDate) : null;
 
+        const deliveredDate = order.delivered_date
+          ? new Date(order.delivered_date)
+          : null;
+        const deliveredStart = deliveredStartDate
+          ? new Date(deliveredStartDate)
+          : null;
+        const deliveredEnd = deliveredEndDate ? new Date(deliveredEndDate) : null;
+
         const dateFilter =
           (!start || orderDate >= start) && (!end || orderDate <= end);
+        const deliveredDateFilter =
+          (!deliveredStart || (deliveredDate && deliveredDate >= deliveredStart)) &&
+          (!deliveredEnd || (deliveredDate && deliveredDate <= deliveredEnd));
         const statusFilterCheck =
           statusFilter === "all" ||
           (statusFilter === "pending" && order.pending_payment !== "0.00") ||
@@ -64,9 +77,17 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
           order.id.toString().includes(searchQuery) ||
           order.user_name.toLowerCase().includes(searchQuery.toLowerCase());
 
-        return dateFilter && statusFilterCheck && searchFilter;
+        return dateFilter && deliveredDateFilter && statusFilterCheck && searchFilter;
       });
-  }, [userorders, startDate, endDate, statusFilter, searchQuery]);
+  }, [
+    userorders,
+    startDate,
+    endDate,
+    deliveredStartDate, // Added to dependencies
+    deliveredEndDate, // Added to dependencies
+    statusFilter,
+    searchQuery,
+  ]);
 
   const exportToExcel = () => {
     const exportData = filteredOrders.map((order) => ({
@@ -189,6 +210,10 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         setStartDate={setStartDate}
         endDate={endDate}
         setEndDate={setEndDate}
+        deliveredStartDate={deliveredStartDate} // Pass new state
+        setDeliveredStartDate={setDeliveredStartDate} // Pass new setter
+        deliveredEndDate={deliveredEndDate} // Pass new state
+        setDeliveredEndDate={setDeliveredEndDate} // Pass new setter
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
         searchQuery={searchQuery}
