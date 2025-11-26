@@ -15,7 +15,7 @@ export default function RecentOrders({
     <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white mb-8 transform transition-all hover:scale-[1.01]">
       <CardContent className="p-6">
         <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-center text-gray-900 tracking-tight">
-          Recent Orders (Top 9)
+          Recent Booking (Top 9)
         </h2>
         {orders.length === 0 ? (
           <div className="text-center text-gray-500 text-lg">No orders found</div>
@@ -28,18 +28,18 @@ export default function RecentOrders({
                 onClick={() => onOrderClick(order)}
               >
                 <h3 className="text-lg font-semibold text-gray-800">
-                  Order ARYAN{order.id}
+                  Booking ARYAN{order.id}
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
                   Client: {order.user_name}
                 </p>
                 <p className="text-gray-600 text-sm mt-1">
-                  Ordered: {formatDate(order.created_at)}{" "}
+                  Booked: {formatDate(order.created_at)}{" "}
                   {formatTime24Hour(order.created_at)}
                 </p>
                 {order.delivered_date && (
                   <p className="text-gray-600 text-sm mt-1">
-                    Delivered: {formatDateTime(order.delivered_date)}
+                    Event Date: {formatDateTime(order.delivered_date)}
                   </p>
                 )}
                 <div className="mt-3 space-y-2">

@@ -363,7 +363,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Filter Orders
+              Filter Booking
             </h2>
             <Button
               onClick={exportToExcel}
@@ -449,7 +449,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                 <Input
                   id="search"
                   type="text"
-                  placeholder="Search by Order ID or User Name"
+                  placeholder="Search by Booking ID or User Name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
@@ -465,7 +465,7 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
       <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white mb-8 transform transition-all hover:scale-[1.01]">
         <CardContent className="p-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-center text-gray-900 tracking-tight">
-            Recent Orders (Top 9)
+            Recent Booking (Top 9)
           </h2>
           {recentOrders.length === 0 ? (
             <div className="text-center text-gray-500 text-lg">
@@ -480,18 +480,18 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
                   onClick={() => handleOrderClick(order)}
                 >
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Order #ARYAN{order.id}
+                    Booking #ARYAN{order.id}
                   </h3>
                   <p className="text-gray-600 text-sm mt-1">
                     User: {order.user_name}
                   </p>
                   <p className="text-gray-600 text-sm mt-1">
-                    Ordered: {formatDate(order.created_at)}{" "}
+                    Booked: {formatDate(order.created_at)}{" "}
                     {formatTime24Hour(order.created_at)}
                   </p>
                   {order.delivered_date && (
                     <p className="text-gray-600 text-sm mt-1">
-                      Delivered: {formatDateTime(order.delivered_date)}
+                      Event Date: {formatDateTime(order.delivered_date)}
                     </p>
                   )}
                   <div className="mt-3 space-y-2">
@@ -547,11 +547,11 @@ export default function OrderTracking({ userorders, onUpdateOrder }) {
       <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white transform transition-all hover:scale-[1.01]">
         <CardContent className="p-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-center text-gray-900 tracking-tight">
-            All User Orders
+            All User Booking
           </h2>
           {filteredOrders.length === 0 ? (
             <div className="text-center text-gray-500 text-lg">
-              No orders found
+              No booking found
             </div>
           ) : (
             <>

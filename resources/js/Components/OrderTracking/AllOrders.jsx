@@ -38,7 +38,7 @@ export default function AllOrders({
     <Card className="w-full max-w-5xl shadow-2xl rounded-2xl bg-white transform transition-all hover:scale-[1.01]">
       <CardContent className="p-6">
         <h2 className="text-2xl sm:text-3xl font-extrabold mb-6 text-center text-gray-900 tracking-tight">
-          All User Orders
+          All User Booking
         </h2>
         {orders.length === 0 ? (
           <div className="text-center text-gray-500 text-lg">

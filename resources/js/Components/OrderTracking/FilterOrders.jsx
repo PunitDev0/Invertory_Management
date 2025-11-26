@@ -33,7 +33,7 @@ export default function FilterOrders({
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Filter Orders
+            Filter Booking
           </h2>
           <Button
             onClick={exportToExcel}

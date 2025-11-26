@@ -379,7 +379,7 @@ export function DashboardContent({
               <div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <FaShoppingCart className="text-blue-600" />
-                  <span className="font-medium">Total Orders</span>
+                  <span className="font-medium">Total Booking</span>
                 </div>
                 <div className="text-3xl font-bold mt-2">{totalOrders}</div>
               </div>
@@ -478,7 +478,7 @@ export function DashboardContent({
               <div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <FaRupeeSign className="text-indigo-600" />
-                  <span className="font-medium">Total Order Amount</span>
+                  <span className="font-medium">Total Booking Amount</span>
                 </div>
                 <div className="text-3xl font-bold mt-2">{formatCurrency(totalOrderAmount)}</div>
               </div>
@@ -846,7 +846,7 @@ export function DashboardContent({
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-xl font-semibold">Recent Orders</h3>
+                <h3 className="text-xl font-semibold">Recent Booking</h3>
                 <p className="text-sm text-gray-500">Latest customer purchases</p>
               </div>
             </div>
@@ -854,7 +854,7 @@ export function DashboardContent({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
+                    <TableHead>Booking ID</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead className="text-right">Pending</TableHead>
                     <TableHead className="text-right">Paid</TableHead>
@@ -898,7 +898,7 @@ export function DashboardContent({
                   {recentOrders.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-gray-500 py-4">
-                        No recent orders
+                        No recent booking
                       </TableCell>
                     </TableRow>
                   )}

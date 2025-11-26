@@ -25,7 +25,7 @@ const navItems = [
   { href: "/admin/category", label: "Category", icon: Package },
   { href: "/admin/branches", label: "Branches", icon: Users },
   { href: "/admin/product", label: "Add Products", icon: PlusCircle },
-  { href: "/admin/ordertracking", label: "Order Tracking", icon: MessageCircle },
+  { href: "/admin/ordertracking", label: "Booking Tracking", icon: MessageCircle },
   { href: "/admin/support-request", label: "Suport ", icon: MessageCircle },
 ];
 
